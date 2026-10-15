@@ -362,6 +362,28 @@ function startPlay(){ $('#hud').classList.remove('hidden'); mode='play'; W.apply
 $('#newGame').onclick=()=>{ initAudio(); localStorage.removeItem(SAVE_KEY); S=freshState(); player.position.copy(localToWorld('yihong',1.5,6.2)); player.rotation.y=0; startPrologue(); };
 $('#continueGame').onclick=async()=>{ initAudio(); const d=localStorage.getItem(SAVE_KEY); if(!d) return; load(JSON.parse(d)); await fade('续　读',200); $('#title').classList.add('hidden'); startPlay(); };
 
+// ================= 遮挡淡出 =================
+let occSpheres=null; const faded=new Map(); const _seg=new THREE.Line3(), _cp=new THREE.Vector3();
+function segDist(a,b,p){ _seg.set(a,b); _seg.closestPointToPoint(p,true,_cp); return _cp.distanceTo(p); }
+function updateOcclusion(dt){
+  if(!occSpheres){ occSpheres=W.occluders.map(m=>{ m.geometry.computeBoundingSphere(); const sp=m.geometry.boundingSphere.clone().applyMatrix4(m.matrixWorld); return {m,sp}; }); }
+  const want=new Set(); const active=mode==='play'||mode==='dialog';
+  if(active){ const camP=W.camera.position; const tgts=mode==='dialog'&&cam.cine?[cam.cine.look,player.position.clone().setY(1.2)]:[player.position.clone().setY(.4),player.position.clone().setY(1.8)];
+    for(const {m,sp} of occSpheres){ if(sp.center.distanceTo(camP)>40) continue; for(const t of tgts){ const r=Math.min(sp.radius,6); if(segDist(camP,t,sp.center)<r*.8+.3 && sp.center.distanceTo(t)>.8){ // 精确：射线命中或网格包围球覆盖视线
+        want.add(m); break; } } }
+    // 进一步收紧：只保留真实遮挡（射线检测）或位于镜头与目标之间很近的
+    const rc=new THREE.Raycaster(); const hitSet=new Set(); for(const t of tgts){ for(const [ox,oy] of [[0,0],[.6,0],[-.6,0],[0,.6]]){ const st=camP.clone(); const d=t.clone().add(new THREE.Vector3(ox,oy,0)).sub(st); rc.set(st,d.clone().normalize()); rc.far=d.length(); for(const h of rc.intersectObjects([...want],false)) hitSet.add(h.object); } }
+    // 同一建筑的屋顶整体淡出：命中物体的父组中所有大件
+    for(const m of hitSet){ want.add(m); } for(const m of [...want]) if(!hitSet.has(m)) want.delete(m);
+    for(const m of [...hitSet]){ m.parent?.children.forEach(c=>{ if(c.isMesh&&c.geometry.type==='BufferGeometry') want.add(c); }); } }
+  for(const m of want){ if(!faded.has(m)){ faded.set(m,{orig:m.material,a:1}); const mm=m.material.clone(); mm.transparent=true; mm.depthWrite=false; m.material=mm; } }
+  for(const [m,f] of faded){ const tgt=want.has(m)?.18:1; f.a+= (tgt-f.a)*Math.min(1,dt*8); m.material.opacity=f.a; m.castShadow=f.a>.9; if(!want.has(m)&&f.a>.97){ m.material.dispose(); m.material=f.orig; m.castShadow=true; faded.delete(m); } }
+  // 对话时隐藏挡镜的旁人
+  for(const n of Object.values(npcs)){ if(!visible(n.id)) continue; let hide=false;
+    if(mode==='dialog'&&cam.cine&&!n.talking){ const c=W.camera.position; hide=segDist(c,cam.cine.look,n.g.position.clone().setY(1.3))<1.4||n.g.position.distanceTo(c)<3; }
+    n.g.visible=!hide; }
+}
+
 // ================= 主循环 =================
 let curLoc=null, stepT=0, mmT=0; const clock=new THREE.Clock(); const tmp=new THREE.Vector3();
 function loop(){
@@ -401,6 +423,7 @@ function loop(){
     cam.boost=(cam.boost??cam.pitch)+(pt-(cam.boost??cam.pitch))*(1-Math.exp(-dt*3)); dir=offAt(Math.max(cam.boost,cam.pitch)); let dd=cam.dist; occRay.set(cam.focus,dir); occRay.far=cam.dist; const oh=occRay.intersectObjects(W.occluders,false); if(oh.length) dd=Math.max(3,oh[0].distance-.4);
     tmp.copy(cam.focus).addScaledVector(dir,dd); tmp.y=Math.max(tmp.y,1.2); W.camera.position.lerp(tmp,1-Math.exp(-dt*7)); W.camera.lookAt(cam.focus);
     if(speed>0&&!keys.q&&!keys.r&&!pointers.size){ /* 轻微自动跟随朝向 */ } if(keys.q) cam.yaw+=dt*1.6; if(keys.r) cam.yaw-=dt*1.6; }
+  updateOcclusion(dt);
   W.followSun(mode==='title'?new THREE.Vector3():player.position); W.tick(dt,t); W.render();
   if(isPlay()&&(mmT+=dt)>.15){ mmT=0; drawMap($('#minimap').getContext('2d'),180,false); }
   requestAnimationFrame(loop);

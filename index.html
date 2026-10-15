@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>红楼·大观园梦 —— 3D 红楼梦互动游戏</title>
+<meta name="description" content="以《红楼梦》为题材的浏览器 3D 互动游戏：漫游大观园，与金陵十二钗对话，结海棠诗社，走向多重结局。">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏮</text></svg>">
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="clock"><b id="dayName">第一回</b> · <span id="timeName">晨</span></div>
+  <div id="stats"></div>
+  <div id="toolbar">
+    <button data-open="journal">📜 簿册</button>
+    <button data-open="save">💾 存档</button>
+    <button data-open="settings">⚙ 设置</button>
+    <button id="restBtn">🌙 歇息</button>
+  </div>
+  <div id="locName"></div>
+  <button id="talkBtn" class="hidden"></button>
+  <div id="toast"></div>
+  <div id="hint">WASD / 方向键行走 · 点击地面移动 · E 或点击人物交谈 · Q/R 旋转视角</div>
+</div>
+
+<div id="title" class="screen">
+  <div class="scroll">
+    <h1>红楼·大观园梦</h1>
+    <p class="sub">满纸荒唐言，一把辛酸泪。都云作者痴，谁解其中味？</p>
+    <div class="menu">
+      <button id="newGame">开卷 · 新游戏</button>
+      <button id="continueGame">续读 · 继续</button>
+      <button data-open="about">卷首 · 玩法</button>
+    </div>
+    <p class="tiny">3D 漫游 · 角色对话（可接入大模型，离线亦可畅玩）· 诗社 · 六种结局</p>
+  </div>
+</div>
+
+<div id="dialog" class="panel hidden">
+  <div class="speaker"><span id="dlgName"></span><small id="dlgTitle"></small></div>
+  <div id="dlgText"></div>
+  <div id="dlgChoices"></div>
+  <form id="chatForm" class="hidden"><input id="chatInput" placeholder="对 TA 说些什么……（自由对话）" autocomplete="off"><button>说</button></form>
+</div>
+
+<div id="modal" class="screen hidden"><div class="scroll wide" id="modalBody"></div></div>
+<div id="fade"></div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -2,52 +2,94 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>红楼·大观园梦 —— 3D 红楼梦互动游戏</title>
-<meta name="description" content="以《红楼梦》为题材的浏览器 3D 互动游戏：漫游大观园，与金陵十二钗对话，结海棠诗社，走向多重结局。">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>红楼·大观园梦 —— 3D《红楼梦》互动叙事游戏</title>
+<meta name="description" content="以《红楼梦》为题材的浏览器 3D 互动叙事游戏：自石头记开篇入梦，漫游大观园，与金陵十二钗对话，结海棠诗社，走向六种结局。">
+<meta name="theme-color" content="#2a1410">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏮</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='12' fill='%23a3211b'/><text x='50' y='70' font-size='62' text-anchor='middle' fill='%23f8e7c0'>红</text></svg>">
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
 </head>
 <body>
 <canvas id="c"></canvas>
 
+<!-- 加载 -->
+<div id="loading" class="screen ink">
+  <div class="loadbox">
+    <div class="vtitle">红楼梦</div>
+    <div class="loadbar"><i id="loadFill"></i></div>
+    <div id="loadText">研墨中……</div>
+  </div>
+</div>
+
+<!-- 标题 -->
+<div id="title" class="screen hidden">
+  <div class="mountains"></div>
+  <div class="titlewrap">
+    <div class="bigtitle"><span>红</span><span>楼</span><span>·</span><span>大</span><span>观</span><span>园</span><span>梦</span></div>
+    <div class="seal">红楼</div>
+    <p class="couplet">满纸荒唐言　一把辛酸泪<br>都云作者痴　谁解其中味</p>
+    <div class="menu">
+      <button id="newGame">开　卷</button>
+      <button id="continueGame">续　读</button>
+      <button data-open="about">卷　首</button>
+      <button data-open="settings">设　置</button>
+    </div>
+    <p class="tiny">建议佩戴耳机 · 支持电脑与手机</p>
+  </div>
+</div>
+
+<!-- 序章 -->
+<div id="prologue" class="screen hidden">
+  <div id="proArt"></div>
+  <div id="proText"></div>
+  <div class="proHint">点击继续</div>
+  <button id="proSkip" class="ghost">跳过序章 »</button>
+</div>
+
+<!-- HUD -->
 <div id="hud" class="hidden">
-  <div id="clock"><b id="dayName">第一回</b> · <span id="timeName">晨</span></div>
+  <div id="clock"><div class="seal sm" id="clockSeal">晨</div><div><b id="dayName">第一回</b><small id="timeName"></small></div></div>
   <div id="stats"></div>
   <div id="toolbar">
-    <button data-open="journal">📜 簿册</button>
-    <button data-open="save">💾 存档</button>
-    <button data-open="settings">⚙ 设置</button>
-    <button id="restBtn">🌙 歇息</button>
+    <button data-open="map" title="园图 (M)"><span>園</span>园图</button>
+    <button data-open="journal" title="簿册 (J)"><span>簿</span>簿册</button>
+    <button data-open="save" title="存档"><span>存</span>存档</button>
+    <button data-open="settings" title="设置"><span>設</span>设置</button>
+    <button id="restBtn" title="歇息，跳过一个时辰"><span>歇</span>歇息</button>
   </div>
+  <canvas id="minimap" width="180" height="180" title="点击打开园图"></canvas>
   <div id="locName"></div>
+  <div id="objective"></div>
   <button id="talkBtn" class="hidden"></button>
   <div id="toast"></div>
-  <div id="hint">WASD / 方向键行走 · 点击地面移动 · E 或点击人物交谈 · Q/R 旋转视角</div>
+  <div id="joy" class="hidden"><div id="joyKnob"></div></div>
+  <div id="hint">WASD 行走 · 点地移动 · E 交谈 · 拖动旋转 · 滚轮缩放 · M 园图</div>
 </div>
 
-<div id="title" class="screen">
-  <div class="scroll">
-    <h1>红楼·大观园梦</h1>
-    <p class="sub">满纸荒唐言，一把辛酸泪。都云作者痴，谁解其中味？</p>
-    <div class="menu">
-      <button id="newGame">开卷 · 新游戏</button>
-      <button id="continueGame">续读 · 继续</button>
-      <button data-open="about">卷首 · 玩法</button>
+<!-- 过场字幕 -->
+<div id="cine" class="hidden"><div class="bar top"></div><div class="bar bot"></div><div id="chapterCard"><div class="chap" id="chapNo"></div><div class="chapTitle" id="chapTitle"></div></div></div>
+
+<!-- 对话 -->
+<div id="dialog" class="hidden">
+  <div class="rod l"></div><div class="rod r"></div>
+  <div class="dlgInner">
+    <div id="portrait"><img id="portraitImg" alt=""><div class="seal sm" id="portraitSeal"></div></div>
+    <div class="dlgMain">
+      <div class="speaker"><span id="dlgName"></span><small id="dlgTitle"></small></div>
+      <div id="dlgText"></div>
+      <div id="dlgChoices"></div>
+      <form id="chatForm" class="hidden"><input id="chatInput" placeholder="对 TA 说些什么……" autocomplete="off" maxlength="80"><button>言</button></form>
     </div>
-    <p class="tiny">3D 漫游 · 角色对话（可接入大模型，离线亦可畅玩）· 诗社 · 六种结局</p>
   </div>
 </div>
 
-<div id="dialog" class="panel hidden">
-  <div class="speaker"><span id="dlgName"></span><small id="dlgTitle"></small></div>
-  <div id="dlgText"></div>
-  <div id="dlgChoices"></div>
-  <form id="chatForm" class="hidden"><input id="chatInput" placeholder="对 TA 说些什么……（自由对话）" autocomplete="off"><button>说</button></form>
-</div>
-
+<div id="tutorial" class="hidden"><div class="tutBox"><div id="tutText"></div><button id="tutNext" class="btn">知道了</button></div></div>
 <div id="modal" class="screen hidden"><div class="scroll wide" id="modalBody"></div></div>
 <div id="fade"></div>
+<noscript>本游戏需要启用 JavaScript。</noscript>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>

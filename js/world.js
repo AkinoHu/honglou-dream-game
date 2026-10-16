@@ -67,7 +67,7 @@ function roofGeo(w,d,h,{seg=22,upturn=.9,ridge=0}={}){
   g.setIndex(idx); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); g.computeVertexNormals(); return g;
 }
 let roofMat, roofMats={};
-const _rafterGeo=new THREE.CylinderGeometry(.055,.055,.7,8); _rafterGeo.rotateX(Math.PI/2);
+const _rafterGeo=new THREE.CylinderGeometry(.035,.035,.42,6); _rafterGeo.rotateX(Math.PI/2);
 // 屋顶：屋面 + 望板底面 + 圆管正脊/垂脊 + 鸱吻 + 戗脊走兽 + 檐椽（InstancedMesh）
 function roof(parent,w,d,h,y,{ridge=0,upturn=.9,ridgeColor=0x222830,mat=roofMat,rotY=0}={}){
   const g=new THREE.Group(); g.position.y=y; g.rotation.y=rotY; parent.add(g);
@@ -77,17 +77,17 @@ function roof(parent,w,d,h,y,{ridge=0,upturn=.9,ridgeColor=0x222830,mat=roofMat,
   const tube=(pts,rad)=>{ const t=mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),Math.max(8,pts.length*2),rad,8,false),rm,0,0,0,g); t.userData.roof=true; return t; };
   const P3=(u,v,lift)=>new THREE.Vector3(u*w/2,roofY(u,v,h,ridge,upturn)+lift,v*d/2);
   // 垂脊/戗脊：从脊端沿屋面曲线到翼角
-  for(const [a,b] of [[-1,-1],[1,-1],[-1,1],[1,1]]){ const pts=[]; for(let k=0;k<=12;k++){ const t=k/12; pts.push(P3(a*(ridge+(1-ridge)*t),b*t,.1)); } pts.push(P3(a*1.03,b*1.03,.35)); tube(pts,.1);
+  for(const [a,b] of [[-1,-1],[1,-1],[-1,1],[1,1]]){ const pts=[]; for(let k=0;k<=12;k++){ const t=k/12; pts.push(P3(a*(ridge+(1-ridge)*t),b*t,.1)); } tube(pts,.09);
     // 走兽：翼角处一列小兽
     for(let k=0;k<3;k++){ const t=.72+k*.08; const q=P3(a*(ridge+(1-ridge)*t),b*t,.22); const s=mesh(new THREE.SphereGeometry(.09,8,6),rm,q.x,q.y,q.z,g,false); s.userData.roof=true; const c=mesh(new THREE.ConeGeometry(.05,.14,6),rm,q.x,q.y+.1,q.z,g,false); c.userData.roof=true; }
     // 檐角风铃
     const tip=P3(a*1.02,b*1.02,-.05); const bell=mesh(new THREE.ConeGeometry(.08,.25,8),P.gold,tip.x,tip.y-.2,tip.z,g,false); bell.userData.roof=true; }
   if(ridge){ const pts=[]; for(let k=0;k<=8;k++) pts.push(new THREE.Vector3((-ridge+2*ridge*k/8)*w/2,h+.14,0)); tube(pts,.17); mesh(rbox(w*ridge+.2,.22,.3),rm,0,h+.02,0,g).userData.roof=true;
     // 鸱吻：卷尾
-    for(const s of[-1,1]){ const c=[]; for(let k=0;k<=10;k++){ const t=k/10, a=t*Math.PI*1.4; c.push(new THREE.Vector3(s*(ridge*w/2+.05-Math.sin(a)*.22*t),h+.2+t*.55+Math.cos(a)*.08,0)); } tube(c,.08); } }
+    for(const s of[-1,1]){ const c=[]; for(let k=0;k<=10;k++){ const t=k/10, a=t*Math.PI*1.4; c.push(new THREE.Vector3(s*(ridge*w/2+.02-Math.sin(a)*.12*t),h+.18+t*.3+Math.cos(a)*.04,0)); } tube(c,.07); mesh(rbox(.22,.32,.2),rm,s*(ridge*w/2-.02),h+.3,0,g).userData.roof=true; } }
   else { const f=mesh(new THREE.SphereGeometry(.28,16,12),P.gold,0,h+.15,0,g); f.userData.roof=true; const f2=mesh(new THREE.ConeGeometry(.12,.5,12),P.gold,0,h+.5,0,g); f2.userData.roof=true; }
   // 檐椽：沿四周檐口一圈
-  if(!LOWQ){ const rs=[]; const step=.42; for(const [ax,bx] of [[1,0],[0,1]]) for(const sg of[-1,1]){ const L=ax?w:d; for(let t=-L/2+.3;t<L/2-.3;t+=step){ const u=ax?t/(w/2):sg*.97, v=ax?sg*.97:t/(d/2); const q=P3(u,v,-.13); rs.push([q, ax?0:Math.PI/2*sg, ax?sg:0]); } }
+  if(!LOWQ){ const rs=[]; const step=.42; for(const [ax,bx] of [[1,0],[0,1]]) for(const sg of[-1,1]){ const L=ax?w:d; for(let t=-L/2+.3;t<L/2-.3;t+=step){ const u=ax?t/(w/2):sg*.97, v=ax?sg*.97:t/(d/2); const q=P3(u,v,-.24); rs.push([q, ax?0:Math.PI/2*sg, ax?sg:0]); } }
     const inst=new THREE.InstancedMesh(_rafterGeo,P.rafter,rs.length); const o=new THREE.Object3D(); rs.forEach(([q,ry,s],i)=>{ o.position.copy(q); o.rotation.set(0,ry,0); if(!s) o.rotation.y=ry; o.updateMatrix(); inst.setMatrixAt(i,o.matrix); }); inst.castShadow=false; g.add(inst); }
   return r;
 }
@@ -102,7 +102,7 @@ function initMats(){
     stone:pbr(LIB,'paving'), brick:pbr(LIB,'brick'), marble:pbr(LIB,'marble',{envMapIntensity:1}), rock:pbr(LIB,'rock',{color:0xc8ccd0}),
     lattice:new THREE.MeshStandardMaterial({map:TEX.lattice,roughness:.8}), beam:new THREE.MeshStandardMaterial({map:TEX.beam,roughness:.55}),
     wall:pbr(LIB,'plaster'), wood:pbr(LIB,'wood'), gold:M(0xd4af37,{metalness:.85,roughness:.28}), dark:M(0x2a2a30,{roughness:.6}),
-    underRoof:M(0x6a2c1a,{side:THREE.BackSide,roughness:.8}), rafter:M(0x7a3420,{roughness:.6}) });
+    underRoof:M(0x6a2c1a,{side:THREE.BackSide,roughness:.8}), rafter:M(0x4a2418,{roughness:.7}) });
 }
 function hall(parent,w,d,H,{double=false,ridge=.45,rm=roofMat}={}){
   // 台基+台阶
@@ -173,7 +173,7 @@ function plum(x,z,s=1,col=0xd2304a){ const g=new THREE.Group(); g.position.set(x
   const bm=M(0x3a2a22); const tips=[];
   const branch=(p,dir,len,r,depth)=>{ const e=p.clone().addScaledVector(dir,len); const c=mesh(new THREE.CylinderGeometry(r*.6,r,len,5),bm,0,0,0,g); c.position.copy(p).lerp(e,.5); c.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir); if(depth<3){ for(let k=0;k<2;k++){ const nd=dir.clone().add(new THREE.Vector3(R(-.9,.9),R(-.1,.6),R(-.9,.9))).normalize(); branch(e,nd,len*.7,r*.6,depth+1);} } else tips.push(e); };
   branch(new THREE.Vector3(0,0,0),new THREE.Vector3(R(-.2,.2),1,R(-.2,.2)).normalize(),1.8,.22,0);
-  const inst=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.13,0),M(col,{emissive:col,emissiveIntensity:.15,roughness:.6}),tips.length*9); const o=new THREE.Object3D(); let n=0;
+  const inst=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.11,1),M(col,{emissive:col,emissiveIntensity:.15,roughness:.6}),tips.length*9); const o=new THREE.Object3D(); let n=0;
   for(const t of tips) for(let k=0;k<9;k++){ o.position.copy(t).add(new THREE.Vector3(R(-.6,.6),R(-.5,.4),R(-.6,.6))); o.scale.setScalar(R(.6,1.3)); o.updateMatrix(); inst.setMatrixAt(n++,o.matrix);} g.add(inst);
   return g; }
 function broadTree(x,z,s=1,cols=[0x4d7a3a,0x5e8c45,0x3f6a30]){ foliageTex(); const g=new THREE.Group(); g.position.set(x,0,z); g.scale.setScalar(s); scene.add(g); treeGroups.push(g);

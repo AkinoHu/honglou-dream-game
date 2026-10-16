@@ -369,11 +369,11 @@ const faded=new Map(); const _seg=new THREE.Line3(), _cp=new THREE.Vector3(); le
 function segDist(a,b,p){ _seg.set(a,b); _seg.closestPointToPoint(p,true,_cp); return _cp.distanceTo(p); }
 // 镜头与目标之间的建筑淡出：用每座院落的代理包围盒做射线检测（合并网格后仍然廉价），10Hz 更新
 function updateOcclusion(dt){
-  const active=mode==='play'||mode==='dialog';
+  const active=(mode==='play'||mode==='dialog')&&!window.__camOverride;
   if((occT+=dt)>.1){ occT=0; want=new Set();
     if(active){ const camP=W.camera.position; const tgts=mode==='dialog'&&cam.cine?[cam.cine.look,player.position.clone().setY(1.2)]:[player.position.clone().setY(.4),player.position.clone().setY(1.8)];
       for(const t of tgts) for(const [ox,oy] of [[0,0],[.6,0],[-.6,0],[0,.6]]){ const e=t.clone().add(new THREE.Vector3(ox,oy,0)); const d=e.sub(camP); const L=d.length(); d.normalize();
-        for(const h of W.rayOccAll(camP,d,L-.6)){ if(h.roof) h.og.roofs.forEach(m=>want.add(m)); else { h.og.meshes.forEach(m=>want.add(m)); h.og.roofs.forEach(m=>want.add(m)); } } } } }
+        for(const h of W.rayOccAll(camP,d,L-.6)) h.og.roofs.forEach(m=>want.add(m)); } } }
   for(const m of want){ if(!faded.has(m)){ faded.set(m,{orig:m.material,a:1}); const mm=m.material.clone(); mm.transparent=true; mm.depthWrite=false; m.material=mm; } }
   for(const [m,f] of faded){ const tgt=want.has(m)?.18:1; f.a+= (tgt-f.a)*Math.min(1,dt*8); m.material.opacity=f.a; m.castShadow=f.a>.9; if(!want.has(m)&&f.a>.97){ m.material.dispose(); m.material=f.orig; m.castShadow=true; faded.delete(m); } }
   // 对话时隐藏挡镜的旁人

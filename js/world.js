@@ -69,7 +69,7 @@ function roofGeo(w,d,h,{seg=22,upturn=.9,ridge=0}={}){
 let roofMat, roofMats={};
 const _rafterGeo=new THREE.CylinderGeometry(.035,.035,.42,6); _rafterGeo.rotateX(Math.PI/2);
 // 屋顶：屋面 + 望板底面 + 圆管正脊/垂脊 + 鸱吻 + 戗脊走兽 + 檐椽（InstancedMesh）
-function roof(parent,w,d,h,y,{ridge=0,upturn=.9,ridgeColor=0x222830,mat=roofMat,rotY=0}={}){
+function roof(parent,w,d,h,y,{ridge=0,upturn=.9,ridgeColor=0x222830,mat=roofMat,rotY=0,noTop=false}={}){
   const g=new THREE.Group(); g.position.y=y; g.rotation.y=rotY; parent.add(g);
   const r=mesh(roofGeo(w,d,h,{ridge,upturn}),mat,0,0,0,g); r.userData.roof=true;
   const under=mesh(roofGeo(w*.985,d*.985,h*.96,{ridge,upturn,seg:16}),P.underRoof,0,-.1,0,g,false); under.userData.roof=true;
@@ -77,17 +77,17 @@ function roof(parent,w,d,h,y,{ridge=0,upturn=.9,ridgeColor=0x222830,mat=roofMat,
   const tube=(pts,rad)=>{ const t=mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),Math.max(8,pts.length*2),rad,8,false),rm,0,0,0,g); t.userData.roof=true; return t; };
   const P3=(u,v,lift)=>new THREE.Vector3(u*w/2,roofY(u,v,h,ridge,upturn)+lift,v*d/2);
   // 垂脊/戗脊：从脊端沿屋面曲线到翼角
-  for(const [a,b] of [[-1,-1],[1,-1],[-1,1],[1,1]]){ const pts=[]; for(let k=0;k<=12;k++){ const t=k/12; pts.push(P3(a*(ridge+(1-ridge)*t),b*t,.1)); } tube(pts,.09);
+  for(const [a,b] of [[-1,-1],[1,-1],[-1,1],[1,1]]){ const pts=[]; for(let k=noTop?5:0;k<=12;k++){ const t=k/12; pts.push(P3(a*(ridge+(1-ridge)*t),b*t,.1)); } tube(pts,.09);
     // 走兽：翼角处一列小兽
     for(let k=0;k<3;k++){ const t=.72+k*.08; const q=P3(a*(ridge+(1-ridge)*t),b*t,.22); const s=mesh(new THREE.SphereGeometry(.09,8,6),rm,q.x,q.y,q.z,g,false); s.userData.roof=true; const c=mesh(new THREE.ConeGeometry(.05,.14,6),rm,q.x,q.y+.1,q.z,g,false); c.userData.roof=true; }
     // 檐角风铃
     const tip=P3(a*1.02,b*1.02,-.05); const bell=mesh(new THREE.ConeGeometry(.08,.25,8),P.gold,tip.x,tip.y-.2,tip.z,g,false); bell.userData.roof=true; }
-  if(ridge){ const pts=[]; for(let k=0;k<=8;k++) pts.push(new THREE.Vector3((-ridge+2*ridge*k/8)*w/2,h+.14,0)); tube(pts,.17); mesh(rbox(w*ridge+.2,.22,.3),rm,0,h+.02,0,g).userData.roof=true;
+  if(noTop){} else if(ridge){ const pts=[]; for(let k=0;k<=8;k++) pts.push(new THREE.Vector3((-ridge+2*ridge*k/8)*w/2,h+.14,0)); tube(pts,.17); mesh(rbox(w*ridge+.2,.22,.3),rm,0,h+.02,0,g).userData.roof=true;
     // 鸱吻：卷尾
     for(const s of[-1,1]){ const c=[]; for(let k=0;k<=10;k++){ const t=k/10, a=t*Math.PI*1.4; c.push(new THREE.Vector3(s*(ridge*w/2+.02-Math.sin(a)*.12*t),h+.18+t*.3+Math.cos(a)*.04,0)); } tube(c,.07); mesh(rbox(.22,.32,.2),rm,s*(ridge*w/2-.02),h+.3,0,g).userData.roof=true; } }
   else { const f=mesh(new THREE.SphereGeometry(.28,16,12),P.gold,0,h+.15,0,g); f.userData.roof=true; const f2=mesh(new THREE.ConeGeometry(.12,.5,12),P.gold,0,h+.5,0,g); f2.userData.roof=true; }
   // 檐椽：沿四周檐口一圈
-  if(!LOWQ){ const rs=[]; const step=.42; for(const [ax,bx] of [[1,0],[0,1]]) for(const sg of[-1,1]){ const L=ax?w:d; for(let t=-L/2+.3;t<L/2-.3;t+=step){ const u=ax?t/(w/2):sg*.97, v=ax?sg*.97:t/(d/2); const q=P3(u,v,-.24); rs.push([q, ax?0:Math.PI/2*sg, ax?sg:0]); } }
+  if(!LOWQ){ const rs=[]; const step=.42; for(const [ax,bx] of [[1,0],[0,1]]) for(const sg of[-1,1]){ const L=ax?w:d; for(let t=-L/2+.3;t<L/2-.3;t+=step){ const u=ax?t/(w/2)*.94:sg*.9, v=ax?sg*.9:t/(d/2)*.94; const q=P3(u,v,-.24); rs.push([q, ax?0:Math.PI/2*sg, ax?sg:0]); } }
     const inst=new THREE.InstancedMesh(_rafterGeo,P.rafter,rs.length); const o=new THREE.Object3D(); rs.forEach(([q,ry,s],i)=>{ o.position.copy(q); o.rotation.set(0,ry,0); if(!s) o.rotation.y=ry; o.updateMatrix(); inst.setMatrixAt(i,o.matrix); }); inst.castShadow=false; g.add(inst); }
   return r;
 }
@@ -121,7 +121,7 @@ function hall(parent,w,d,H,{double=false,ridge=.45,rm=roofMat}={}){
   for(const z of[-d/2,d/2]) BOX(w+.4,.5,.3,P.beam,0,.7+H-.1,z,parent);
   for(const x of[-w/2,w/2]) BOX(.3,.5,d+.4,P.beam,x,.7+H-.1,0,parent);
   BOX(w+.6,.25,d+.6,P.wood,0,.7+H+.25,0,parent);
-  roof(parent,w+3.2,d+3.2,H*.62,.7+H+.35,{ridge,mat:rm});
+  roof(parent,w+3.2,d+3.2,H*.62,.7+H+.35,{ridge,mat:rm,noTop:double});
   if(double){ const y=.7+H+.35+H*.62*.55; BOX(w*.55,1,d*.55,P.pillar,0,y+.3,0,parent); roof(parent,w*.75,d*.75,H*.5,y+.8,{ridge,mat:rm}); }
 }
 function pavilion(parent,r,H,{sides=6,double=true}={}){
@@ -129,7 +129,7 @@ function pavilion(parent,r,H,{sides=6,double=true}={}){
   for(let i=0;i<sides;i++){ const a=i/sides*Math.PI*2; CYL(.16,.18,H,P.pillar,Math.cos(a)*r,.6+H/2,Math.sin(a)*r,parent); 
     const a2=(i+.5)/sides*Math.PI*2, L=2*r*Math.sin(Math.PI/sides); const rail=BOX(L,.5,.12,P.wood,Math.cos(a2)*r*.92,.95,Math.sin(a2)*r*.92,parent); rail.rotation.y=-a2+Math.PI/2; }
   const ring=mesh(new THREE.CylinderGeometry(r+.15,r+.15,.4,sides,1,true),P.beam,0,.6+H,0,parent);
-  roof(parent,2*r+2.6,2*r+2.6,H*.8,.6+H+.1,{upturn:.8,rotY:Math.PI/4,mat:roofMats.glaze});
+  roof(parent,2*r+2.6,2*r+2.6,H*.8,.6+H+.1,{upturn:.8,rotY:Math.PI/4,mat:roofMats.glaze,noTop:double});
   if(double) roof(parent,2*r,2*r,H*.6,.6+H+H*.5,{upturn:.6,mat:roofMats.glaze});
 }
 function compoundWall(parent,w,d,{gate=true}={}){
@@ -446,8 +446,8 @@ export function renderPortraits(styles){
 
 // ---------- 天色 ----------
 const SKIES=[ // 晨 午 暮(夜)
-  {elev:16,az:120,exp:.95,sun:2.0,sunC:0xffdcae,hemi:.85,fog:0xf0dcc0,fogD:.0055,lant:.25,night:0,grade:{uSat:.88,uContrast:1.05,uHighTint:[1.05,1.0,.92],uShadowTint:[.97,.99,1.03],uVignette:.3,uPaper:.04,uExposure:1,bloom:[.28,3.4]}},
-  {elev:42,az:200,exp:.9,sun:2.2,sunC:0xfff1d8,hemi:.9,fog:0xe8e4d6,fogD:.0045,lant:.2,night:0,grade:{uSat:.86,uContrast:1.04,uHighTint:[1.04,1.0,.93],uShadowTint:[.97,.99,1.03],uVignette:.28,uPaper:.04,uExposure:1,bloom:[.26,3.6]}},
+  {elev:16,az:120,exp:.95,sun:2.0,sunC:0xffdcae,hemi:.85,fog:0xf0dcc0,fogD:.0055,lant:.25,night:0,grade:{uSat:.82,uContrast:1.05,uHighTint:[1.05,1.0,.92],uShadowTint:[.97,.99,1.03],uVignette:.3,uPaper:.04,uExposure:1,bloom:[.28,3.4]}},
+  {elev:42,az:200,exp:.9,sun:2.2,sunC:0xfff1d8,hemi:.9,fog:0xe8e4d6,fogD:.0045,lant:.2,night:0,grade:{uSat:.8,uContrast:1.04,uHighTint:[1.04,1.0,.93],uShadowTint:[.97,.99,1.03],uVignette:.28,uPaper:.04,uExposure:1,bloom:[.26,3.6]}},
   {elev:-6,az:250,exp:.8,sun:.9,sunC:0xa8b8e8,hemi:.6,fog:0x1e2640,fogD:.009,lant:3.2,night:1,grade:{uSat:.8,uContrast:1.06,uHighTint:[1.08,.98,.86],uShadowTint:[.93,.97,1.08],uVignette:.4,uPaper:.03,uExposure:1.1,bloom:[.55,1.1]}},
 ];
 let curSky=0, envRT=null;

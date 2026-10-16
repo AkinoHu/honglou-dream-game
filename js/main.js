@@ -24,7 +24,8 @@ let portraits={}, player, npcs={};
 async function boot(){
   setLoad(10,'铺纸研墨……'); await nextFrame(); await nextFrame();
   W.buildWorld(LOCATIONS); W.registerColliders(LOCATIONS);
-  setLoad(45,'起造亭台楼阁……'); await nextFrame();
+  setLoad(40,'起造亭台楼阁……'); await nextFrame();
+  await W.bakeLighting(f=>setLoad(40+Math.round(f*8),'晕染光影……')); setLoad(48,'安置人物……'); await nextFrame();
   player=W.makeCharacter(PLAYER_STYLE); W.scene.add(player);
   for(const [id,C] of Object.entries(CHARS)){ const g=W.makeCharacter(C.style); W.scene.add(g); npcs[id]={g,id,path:[],wait:R(1,4),speed:0,place:null}; }
   setLoad(65,'描画众钗容貌……'); await nextFrame();
@@ -179,7 +180,7 @@ function faceEachOther(id){ const n=npcs[id]; n.talking=true; n.path=[]; const p
   const dirs=[]; const base=narrow?[[-1,.35],[1,.35],[-1,-.35],[1,-.35]]:[[ -.3,1],[-.3,-1],[-.7,.7],[-.7,-.7],[.3,1],[.3,-1]]; // [沿轴(负=玩家身后), 侧向]
   for(const [a,b] of base) dirs.push(axis.clone().multiplyScalar(a).addScaledVector(side,b).normalize());
   const heads=[p.clone().setY(1.9),q.clone().setY(1.9),look];
-  const clear=cp=>heads.every(h=>{ const d=cp.clone().sub(h); occRay.set(h,d.clone().normalize()); occRay.far=d.length(); return !occRay.intersectObjects(W.occluders,false).length; });
+  const clear=cp=>heads.every(h=>{ const d=cp.clone().sub(h); const L=d.length(); return W.rayOcc(h,d.normalize(),L,true).dist>=L; });
   let pos=null; for(const h of [1.1,2.6]){ for(const d of dirs){ const cp=look.clone().addScaledVector(d,D).add(new THREE.Vector3(0,h,0)); if(clear(cp)){ pos=cp; break; } } if(pos) break; }
   if(!pos){ for(const d of dirs){ const cp=look.clone().addScaledVector(d,3.2).add(new THREE.Vector3(0,5,0)); if(clear(cp)){ pos=cp; break; } } }
   if(!pos){ cam.cine=null; return; }
@@ -289,6 +290,7 @@ const PAGES={
   save:()=>{ const has=localStorage.getItem(SAVE_KEY+'_manual'); return `<h2>存　档</h2><p>每过一个时辰自动存档（浏览器本地）。</p><div class="menu" style="margin:0 auto"><button id="doSave">手动存档</button><button id="doLoad" ${has?'':'disabled'}>读取手动存档</button><button id="doExport">导出存档</button><button id="doImport">导入存档</button><button id="doReset">重新开卷</button></div>`; },
   settings:()=>{ const c=aiCfg(), v=getVol(); return `<h2>设　置</h2>
     <h3>声　音</h3><label>琴曲 <input type="range" min="0" max="1" step=".05" value="${v.music}" data-vol="music"></label><label>环境（风、鸟、虫） <input type="range" min="0" max="1" step=".05" value="${v.amb}" data-vol="amb"></label><label>音效 <input type="range" min="0" max="1" step=".05" value="${v.sfx}" data-vol="sfx"></label>
+    <h3>画　质</h3><label>画质档位 <select id="qualitySel">${[["auto","自动"],["high","高（环境光遮蔽+倒影）"],["medium","中"],["low","低（手机）"]].map(([k,n])=>`<option value="${k}" ${(localStorage.getItem("honglou_quality")||"auto")===k?"selected":""}>${n}</option>`).join("")}</select></label><p class="hint" style="font-size:12px;opacity:.7">当前：${W.R.q.name}档${W.R.fps?`，约 ${W.R.fps.toFixed(0)} 帧`:""}。切换"倒影/草量"需重新载入页面。</p>
     <h3>大模型对话（可选）</h3><p class="tiny" style="color:#6a4a2a">填写任意兼容 OpenAI Chat Completions 的服务（OpenAI、DeepSeek、xAI、Moonshot 等）。密钥只保存在你的浏览器里，由浏览器直接发给该服务。留空则用离线对话。</p>
     <label>API 地址</label><input class="f" id="cfgBase" value="${c.base||''}" placeholder="https://api.deepseek.com/v1"><label>模型名</label><input class="f" id="cfgModel" value="${c.model||''}" placeholder="deepseek-chat"><label>API Key</label><input class="f" id="cfgKey" type="password" value="${c.key||''}" placeholder="sk-...">
     <div style="margin-top:12px;display:flex;gap:8px"><button class="btn" id="cfgSave">保存</button><button class="btn" id="cfgClear">清除密钥</button></div>`; },
@@ -302,7 +304,7 @@ function bindPage(name){
     $('#doExport').onclick=()=>{ const t=btoa(unescape(encodeURIComponent(JSON.stringify(snap())))); navigator.clipboard?.writeText(t).then(()=>toast('存档文本已复制到剪贴板'),()=>prompt('复制以下存档文本',t)); };
     $('#doImport').onclick=()=>{ const t=prompt('粘贴存档文本'); if(!t) return; try{ load(JSON.parse(decodeURIComponent(escape(atob(t.trim()))))); toast('已导入'); closeModal(); }catch{ toast('存档文本有误'); } };
     $('#doReset').onclick=()=>{ if(confirm('确定清除进度，重新开卷？')){ localStorage.removeItem(SAVE_KEY); location.reload(); } }; }
-  if(name==='settings'){ document.querySelectorAll('[data-vol]').forEach(r=>r.oninput=()=>setVol(r.dataset.vol,+r.value));
+  if(name==='settings'){ document.querySelectorAll('[data-vol]').forEach(r=>r.oninput=()=>setVol(r.dataset.vol,+r.value)); const qs=$('#qualitySel'); if(qs) qs.onchange=()=>{ localStorage.setItem('honglou_quality',qs.value); W.R.auto=qs.value==='auto'; if(qs.value!=='auto') W.R.setTier(qs.value); };
     $('#cfgSave').onclick=()=>{ localStorage.setItem(CFG_KEY,JSON.stringify({base:$('#cfgBase').value.trim(),model:$('#cfgModel').value.trim(),key:$('#cfgKey').value.trim()})); toast('已保存'); closeModal(); };
     $('#cfgClear').onclick=()=>{ localStorage.removeItem(CFG_KEY); toast('已清除，改用离线对话'); closeModal(); }; }
   if(name==='map'){ const c=$('#mapCanvas'); drawMap(c.getContext('2d'),600,true); c.onclick=e=>{ const r=c.getBoundingClientRect(); const x=(e.clientX-r.left)/r.width*600, y=(e.clientY-r.top)/r.height*600; const wx=(x-300)/5.6, wz=(y-300)/5.6;
@@ -363,19 +365,15 @@ $('#newGame').onclick=()=>{ initAudio(); localStorage.removeItem(SAVE_KEY); S=fr
 $('#continueGame').onclick=async()=>{ initAudio(); const d=localStorage.getItem(SAVE_KEY); if(!d) return; load(JSON.parse(d)); await fade('续　读',200); $('#title').classList.add('hidden'); startPlay(); };
 
 // ================= 遮挡淡出 =================
-let occSpheres=null; const faded=new Map(); const _seg=new THREE.Line3(), _cp=new THREE.Vector3();
+const faded=new Map(); const _seg=new THREE.Line3(), _cp=new THREE.Vector3(); let occT=0, want=new Set();
 function segDist(a,b,p){ _seg.set(a,b); _seg.closestPointToPoint(p,true,_cp); return _cp.distanceTo(p); }
+// 镜头与目标之间的建筑淡出：用每座院落的代理包围盒做射线检测（合并网格后仍然廉价），10Hz 更新
 function updateOcclusion(dt){
-  if(!occSpheres){ occSpheres=W.occluders.map(m=>{ m.geometry.computeBoundingSphere(); const sp=m.geometry.boundingSphere.clone().applyMatrix4(m.matrixWorld); return {m,sp}; }); }
-  const want=new Set(); const active=mode==='play'||mode==='dialog';
-  if(active){ const camP=W.camera.position; const tgts=mode==='dialog'&&cam.cine?[cam.cine.look,player.position.clone().setY(1.2)]:[player.position.clone().setY(.4),player.position.clone().setY(1.8)];
-    for(const {m,sp} of occSpheres){ if(sp.center.distanceTo(camP)>40) continue; for(const t of tgts){ const r=Math.min(sp.radius,6); if(segDist(camP,t,sp.center)<r*.8+.3 && sp.center.distanceTo(t)>.8){ // 精确：射线命中或网格包围球覆盖视线
-        want.add(m); break; } } }
-    // 进一步收紧：只保留真实遮挡（射线检测）或位于镜头与目标之间很近的
-    const rc=new THREE.Raycaster(); const hitSet=new Set(); for(const t of tgts){ for(const [ox,oy] of [[0,0],[.6,0],[-.6,0],[0,.6]]){ const st=camP.clone(); const d=t.clone().add(new THREE.Vector3(ox,oy,0)).sub(st); rc.set(st,d.clone().normalize()); rc.far=d.length(); for(const h of rc.intersectObjects([...want],false)) hitSet.add(h.object); } }
-    // 同一建筑的屋顶整体淡出：命中物体的父组中所有大件
-    for(const m of hitSet){ want.add(m); } for(const m of [...want]) if(!hitSet.has(m)) want.delete(m);
-    for(const m of [...hitSet]){ m.parent?.children.forEach(c=>{ if(c.isMesh&&c.geometry.type==='BufferGeometry') want.add(c); }); } }
+  const active=mode==='play'||mode==='dialog';
+  if((occT+=dt)>.1){ occT=0; want=new Set();
+    if(active){ const camP=W.camera.position; const tgts=mode==='dialog'&&cam.cine?[cam.cine.look,player.position.clone().setY(1.2)]:[player.position.clone().setY(.4),player.position.clone().setY(1.8)];
+      for(const t of tgts) for(const [ox,oy] of [[0,0],[.6,0],[-.6,0],[0,.6]]){ const e=t.clone().add(new THREE.Vector3(ox,oy,0)); const d=e.sub(camP); const L=d.length(); d.normalize();
+        for(const h of W.rayOccAll(camP,d,L-.6)){ if(h.roof) h.og.roofs.forEach(m=>want.add(m)); else { h.og.meshes.forEach(m=>want.add(m)); h.og.roofs.forEach(m=>want.add(m)); } } } } }
   for(const m of want){ if(!faded.has(m)){ faded.set(m,{orig:m.material,a:1}); const mm=m.material.clone(); mm.transparent=true; mm.depthWrite=false; m.material=mm; } }
   for(const [m,f] of faded){ const tgt=want.has(m)?.18:1; f.a+= (tgt-f.a)*Math.min(1,dt*8); m.material.opacity=f.a; m.castShadow=f.a>.9; if(!want.has(m)&&f.a>.97){ m.material.dispose(); m.material=f.orig; m.castShadow=true; faded.delete(m); } }
   // 对话时隐藏挡镜的旁人
@@ -385,9 +383,9 @@ function updateOcclusion(dt){
 }
 
 // ================= 主循环 =================
-let curLoc=null, stepT=0, mmT=0; const clock=new THREE.Clock(); const tmp=new THREE.Vector3();
+let curLoc=null, stepT=0, mmT=0; const clock=new THREE.Timer(); const tmp=new THREE.Vector3();
 function loop(){
-  const dt=Math.min(clock.getDelta(),.05), t=clock.elapsedTime;
+  clock.update(); const dt=Math.min(clock.getDelta(),.05), t=clock.getElapsed();
   // 玩家移动
   let mv=new THREE.Vector3();
   if(isPlay()){
@@ -412,15 +410,16 @@ function loop(){
   // 地点与事件
   if(isPlay()){ let loc=null; const r=regionOf(player.position); if(r) loc=LOC[r]; else { for(const L of LOCATIONS){ if(L.kind==='pavilion') continue; if(player.position.distanceTo(gateOut(L.id))<3.2) loc=L; } }
     if(loc!==curLoc){ curLoc=loc; const el=$('#locName'); if(loc){ el.textContent=loc.name; el.style.opacity=1; toast(loc.desc,3800); clearTimeout(el.h); el.h=setTimeout(()=>el.style.opacity=0,2400); } }
-    if(loc && r===loc.id){ const ev=pendingEvents().find(e=>e.loc===loc.id); if(ev) runEvent(ev); } }
+    if(loc && r===loc.id){ const ev=pendingEvents().find(e=>e.loc===loc.id); if(ev&&!window.__noEvents) runEvent(ev); } }
   // 镜头
-  if(mode==='title'||mode==='loading'||mode==='prologue'){ const a=t*.04; W.camera.position.set(Math.sin(a)*58,26,Math.cos(a)*58); W.camera.lookAt(0,2,0); }
+  if(window.__camOverride){ const o=window.__camOverride; W.camera.position.set(...o.pos); W.camera.lookAt(...o.look); }
+  else if(mode==='title'||mode==='loading'||mode==='prologue'){ const a=t*.04; W.camera.position.set(Math.sin(a)*58,26,Math.cos(a)*58); W.camera.lookAt(0,2,0); }
   else if(cam.cine&&cam.cine.orbit){ const c=cam.cine, a=c.a0+(performance.now()-c.t0)/1000*.06; tmp.set(c.center.x+Math.sin(a)*c.r,c.center.y+6.5,c.center.z+Math.cos(a)*c.r); W.camera.position.lerp(tmp,1-Math.exp(-dt*1.6)); cam.focus.lerp(c.center,1-Math.exp(-dt*2.5)); W.camera.lookAt(cam.focus); }
   else if(cam.cine){ W.camera.position.lerp(cam.cine.pos,1-Math.exp(-dt*5)); cam.focus.lerp(cam.cine.look,1-Math.exp(-dt*6)); W.camera.lookAt(cam.focus); }
   else { cam.dist+=(cam.tDist-cam.dist)*(1-Math.exp(-dt*6)); const tgt=player.position.clone().add(new THREE.Vector3(0,1.6,0)); cam.focus.lerp(tgt,1-Math.exp(-dt*9));
     const offAt=pt=>new THREE.Vector3(Math.sin(cam.yaw)*Math.cos(pt),Math.sin(pt),Math.cos(cam.yaw)*Math.cos(pt));
-    let pt=cam.pitch, dir=offAt(pt); for(let i=0;i<6;i++){ occRay.set(cam.focus,dir); occRay.far=cam.dist; if(!occRay.intersectObjects(W.occluders,false).length) break; pt=Math.min(1.0,pt+.1); dir=offAt(pt); }
-    cam.boost=(cam.boost??cam.pitch)+(pt-(cam.boost??cam.pitch))*(1-Math.exp(-dt*3)); dir=offAt(Math.max(cam.boost,cam.pitch)); let dd=cam.dist; occRay.set(cam.focus,dir); occRay.far=cam.dist; const oh=occRay.intersectObjects(W.occluders,false); if(oh.length) dd=Math.max(3,oh[0].distance-.4);
+    let pt=cam.pitch, dir=offAt(pt); for(let i=0;i<6;i++){ if(W.rayOcc(cam.focus,dir,cam.dist,false).dist>=cam.dist) break; pt=Math.min(1.0,pt+.1); dir=offAt(pt); }
+    cam.boost=(cam.boost??cam.pitch)+(pt-(cam.boost??cam.pitch))*(1-Math.exp(-dt*3)); dir=offAt(Math.max(cam.boost,cam.pitch)); let dd=cam.dist; const oh=W.rayOcc(cam.focus,dir,cam.dist,false); if(oh.dist<cam.dist) dd=Math.max(3,oh.dist-.4);
     tmp.copy(cam.focus).addScaledVector(dir,dd); tmp.y=Math.max(tmp.y,1.2); W.camera.position.lerp(tmp,1-Math.exp(-dt*7)); W.camera.lookAt(cam.focus);
     if(speed>0&&!keys.q&&!keys.r&&!pointers.size){ /* 轻微自动跟随朝向 */ } if(keys.q) cam.yaw+=dt*1.6; if(keys.r) cam.yaw-=dt*1.6; }
   updateOcclusion(dt);
@@ -432,4 +431,4 @@ addEventListener('resize',W.resize);
 boot().then(()=>loop()).catch(e=>{ console.error(e); $('#loadText').textContent='加载出错：'+e.message; });
 
 // 调试 / 自动化测试接口
-window.__game={ get S(){return S;}, set S(v){S=v;}, openTalk, runEvent, finish, spendSlot, EVENTS, CHARS, decideEnding, get mode(){return mode;}, npcs, get player(){return player;}, walkTo, startPlay, load };
+window.__game={ cam, W, get S(){return S;}, set S(v){S=v;}, openTalk, runEvent, finish, spendSlot, EVENTS, CHARS, decideEnding, get mode(){return mode;}, npcs, get player(){return player;}, walkTo, startPlay, load };

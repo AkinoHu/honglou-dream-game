@@ -570,12 +570,13 @@ const _v=new THREE.Vector3();
 export function blocked(x,z){
   const i=Math.round(x/1000);
   if(i===0){ if(Math.abs(x)>48.5||Math.abs(z)>48.5) return true;
-    const r=Math.hypot(x,z); if(r<10.6 && r>3.5 && !(Math.abs(x)<1.05 && Math.abs(z)<10.2)) return true; }
+    // 沁芳池：外沿约 10.6，亭岛约 3.5；南北拱桥走道须贯通外沿，否则卡在桥口进不去亭
+    const r=Math.hypot(x,z); if(r<10.6 && r>3.5 && !(Math.abs(x)<1.25 && Math.abs(z)<11.4)) return true; }
   else { const id=regionOfX(x), B=regionBounds[id]; if(!B) return true; const lx=x-i*1000; if(Math.abs(lx)>B.bx||Math.abs(z)>B.bz) return true; for(const [a,b,e,f] of B.rects) if(lx>a&&lx<b&&z>e&&z<f) return true; }
   for(const c of colliders){ const gx=c.g.matrixWorld.elements[12]; if(Math.abs(gx-x)>40) continue; _v.set(x,0,z); c.g.worldToLocal(_v); for(const [a,b,e,f] of c.rects) if(_v.x>a&&_v.x<b&&_v.z>e&&_v.z<f) return true; }
   return false;
 }
-export function groundHeight(x,z){ if(Math.abs(x)>500) return 0; const r=Math.hypot(x,z); if(r<=3.5) return .6; if(Math.abs(x)<1.1&&Math.abs(z)>=3.5&&Math.abs(z)<9.9){ const t=(Math.abs(z)-6.6)/3.2; return Math.max(.6*(Math.abs(z)<4.5?1:0), 1.45*(1-t*t)); } return 0; }
+export function groundHeight(x,z){ if(Math.abs(x)>500) return 0; const r=Math.hypot(x,z); if(r<=3.5) return .6; if(Math.abs(x)<1.3&&Math.abs(z)>=3.5&&Math.abs(z)<11.2){ const t=(Math.abs(z)-6.6)/4.4; return Math.max(.6*(Math.abs(z)<4.5?1:0), 1.45*Math.max(0,1-t*t)); } return 0; }
 
 // ---------- 地域切换 / 其余地域按需构建（流式） ----------
 let regionLook=null;

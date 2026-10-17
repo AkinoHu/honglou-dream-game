@@ -77,11 +77,11 @@ function planGarden(from,to){
   if(rf===rt && rf) return [to.clone()];
   let a;
   if(rf && rf!=='qinfang'){ pts.push(localToWorld(rf,0,6.5),localToWorld(rf,0,9.4),gateOut(rf)); a=ringAngle(gateOut(rf)); pts.push(ringPoint(a)); }
-  else if(rf==='qinfang'){ const s=from.z>=0?1:-1; pts.push(new V3(0,0,s*3),new V3(0,0,s*11.2)); a=s>0?Math.PI/2:-Math.PI/2; pts.push(ringPoint(a)); }
+  else if(rf==='qinfang'){ const s=from.z>=0?1:-1; pts.push(new V3(0,0,s*3),new V3(0,0,s*12.0)); a=s>0?Math.PI/2:-Math.PI/2; pts.push(ringPoint(a)); }
   else { a=ringAngle(from); pts.push(ringPoint(a)); }
   let b;
   if(rt && rt!=='qinfang'){ b=ringAngle(gateOut(rt)); pts.push(...arc(a,b), gateOut(rt), localToWorld(rt,0,9.4), localToWorld(rt,0,6.5)); }
-  else if(rt==='qinfang'){ const s=to.z>=0?1:-1; b=s>0?Math.PI/2:-Math.PI/2; pts.push(...arc(a,b), new V3(0,0,s*11.2), new V3(0,0,s*3)); }
+  else if(rt==='qinfang'){ const s=to.z>=0?1:-1; b=s>0?Math.PI/2:-Math.PI/2; pts.push(...arc(a,b), new V3(0,0,s*12.0), new V3(0,0,s*3)); }
   else { b=ringAngle(to); pts.push(...arc(a,b)); }
   pts.push(to.clone()); return pts;
 }

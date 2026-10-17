@@ -105,7 +105,7 @@ input[type=range]{width:100%;accent-color:var(--red)}
 #fade.on{opacity:1;pointer-events:auto}
 @media (max-width:700px){
   #stats{display:none}#hint{display:none}#clock{font-size:18px;padding:6px 12px 6px 8px}#toolbar{top:auto;bottom:12px;right:auto;left:50%;transform:translateX(-50%);gap:4px}#toolbar button{padding:4px 7px;font-size:10px}#toolbar button span{font-size:17px}
-  #minimap{width:96px;height:96px;top:14px;right:14px;bottom:auto}#tracker{top:118px;max-width:210px;font-size:12px}#guide{top:auto;bottom:118px;width:94vw}#guide img{width:44px;height:55px}#hintCard{top:auto;bottom:250px;left:50%;right:auto;transform:translateX(-50%);width:86vw}.mapzoom{right:6px}
+  #minimap{width:96px;height:96px;top:14px;right:14px;bottom:auto}#tracker{top:118px;max-width:210px;font-size:12px}#guide{top:auto;bottom:118px;width:94vw}#guide img{width:44px;height:55px}#hintCard{top:auto;bottom:250px;left:50%;right:auto;transform:translateX(-50%);width:86vw}#hintCard.on{transform:translateX(-50%)}.mapzoom{right:6px}
   #talkBtn{bottom:190px}#toast{bottom:240px}#joy{bottom:80px;left:16px;width:110px;height:110px}#joyKnob{left:30px;top:30px}
   #portrait{flex-basis:84px;margin-top:-50px}#portrait img{width:84px;height:106px}#portrait .seal{display:none}
   .dlgInner{padding:12px 14px 12px 12px;gap:10px;max-height:62vh}#dlgText{font-size:15.5px}.speaker{font-size:22px}
@@ -142,8 +142,8 @@ kbd{display:inline-block;min-width:1.5em;padding:0 5px;margin:0 1px;border:1px s
 #tutArrow.up{transform:translate(-50%,0);animation:bup .8s infinite alternate}
 @keyframes bdown{to{margin-top:-12px}}@keyframes bup{to{margin-top:12px}}
 /* ===== 情境提示 ===== */
-#hintCard{position:fixed;left:14px;top:50%;transform:translateY(-50%) translateX(-20px);opacity:0;transition:all .3s;z-index:19;width:280px;background:var(--xuan),linear-gradient(170deg,#f8efdc,#ecdcb8);border:1px solid #9e7a40;border-top:4px solid var(--gold);padding:10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.45);font-size:14px;line-height:1.7;color:#2a1a12}
-#hintCard.on{opacity:1;transform:translateY(-50%)}
+#hintCard{position:fixed;right:14px;bottom:200px;transform:translateX(20px);opacity:0;transition:all .3s;z-index:19;width:280px;background:var(--xuan),linear-gradient(170deg,#f8efdc,#ecdcb8);border:1px solid #9e7a40;border-top:4px solid var(--gold);padding:10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.45);font-size:14px;line-height:1.7;color:#2a1a12}
+#hintCard.on{opacity:1;transform:none}
 #hintCard b{display:block;color:var(--red);letter-spacing:2px;margin-bottom:2px}
 #hintCard button{margin-top:6px;font-size:13px;padding:3px 12px;border:1px solid #9e7a40;background:#f3e8cf;cursor:pointer}
 /* ===== 地域转场 ===== */

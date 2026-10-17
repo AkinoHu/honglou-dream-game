@@ -5,7 +5,7 @@ import { REGIONS, REGION_ORDER, GARDEN_SPOTS, REGION_LOCS, REGION_DEFS, NEW_CHAR
 import { DECOR } from './regions.js';
 import { initAudio, setMood, sfx, getVol, setVol } from './audio.js';
 
-const TUTORIAL_ON=false; // 新手引导留待第二期
+const TUTORIAL_ON=true;
 const $=s=>document.querySelector(s);
 const V3=THREE.Vector3;
 const CN=['零','一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五','十六'];
@@ -192,7 +192,7 @@ if(isTouch){ $('#joy').classList.remove('hidden'); $('#hint').classList.add('hid
 function toast(t,ms=2600){ const el=$('#toast'); el.textContent=t; el.style.opacity=1; clearTimeout(toast.h); toast.h=setTimeout(()=>el.style.opacity=0,ms); }
 const nameOf=k=>STAT_NAMES[k]||CHARS[k]?.name?.replace(/^(林|薛|史|贾|王|花)/,'')||k;
 function effHTML(eff){ const s=Object.entries(eff||{}).map(([k,v])=>`${nameOf(k)}${v>0?'＋':'－'}${Math.abs(v)}`).join('　'); return s?`<div class="eff">${s}</div>`:''; }
-function applyEff(eff){ let good=0; for(const [k,v] of Object.entries(eff||{})){ good+=v; if(k in STAT_NAMES) S[k]=clamp(S[k]+v); else if(k in S.aff) S.aff[k]=clamp(S.aff[k]+v); } renderStats(); sfx(good>=0?'good':'bad'); }
+function applyEff(eff){ let good=0; for(const [k,v] of Object.entries(eff||{})){ good+=v; if(k in STAT_NAMES) S[k]=clamp(S[k]+v); else if(k in S.aff){ const o=S.aff[k]; S.aff[k]=clamp(S.aff[k]+v); if([35,50,60].some(t=>o<t&&S.aff[k]>=t)) setTimeout(()=>hint('aff'),600); } } renderStats(); sfx(good>=0?'good':'bad'); }
 const clamp=v=>Math.max(0,Math.min(100,v));
 function renderStats(){
   $('#dayName').textContent=`第${CN[Math.min(S.day,MAX_DAY)]}回`; $('#timeName').textContent=`${TIMES[S.slot]}时 · 余${3-S.slot}时辰 · ${REGIONS[S.region].name}`; $('#clockSeal').textContent=TIMES[S.slot];
@@ -540,7 +540,7 @@ $('#restBtn').onclick=async()=>{ if(!isPlay()) return; await spendSlot(); };
 $('#minimap').onclick=()=>openPage('map');
 
 // ================= 新手引导（袭人） =================
-const T={moved:0,rot:0,talk:0,choose:0,map:0,follow:0,journal:0,save:0};
+const T={moved:0,rot:0,talk:0,choose:0,map:0,follow:0,journal:0,gate:0,save:0};
 const kb=s=>s.split(' ').map(k=>`<kbd>${k}</kbd>`).join('');
 const TUT_STEPS=[
   {id:'move',text:()=>isTouch?'二爷醒了？先活动活动。用左下角的<b>摇杆</b>走几步，或者<b>点一下地面</b>，就会自己走过去。':`二爷醒了？先活动活动。按 ${kb('W A S D')}（或方向键）走几步；也可以<b>点击地面</b>，就会自己走过去。`,hl:()=>isTouch?'#joy':null,done:()=>T.moved>=4},
@@ -550,7 +550,8 @@ const TUT_STEPS=[
   {id:'map',text:()=>`打开<b>地图</b>看看：${isTouch?'点右上角的小地图':`按 ${kb('M')}，或点右上角的小地图`}。`,hl:()=>mode==='modal'?null:'#minimap',done:()=>T.map},
   {id:'follow',text:()=>'地图上的 <b style="color:#c0392b">◆</b> 就是该去的地方。合上地图，跟着地上的<b>金色光柱</b>（或屏幕边上的红箭头）走到园心的<b>沁芳亭</b>。',target:()=>({rid:'garden',loc:'qinfang',label:'去沁芳亭',sub:'元妃省亲就要开始了'}),hl:()=>mode==='modal'?'#mClose':'#tracker',done:()=>T.follow||curLoc?.id==='qinfang'},
   {id:'journal',text:()=>`看完了？${isTouch?'点下方工具栏的':`按 ${kb('J')}，或点工具栏的`}<b>「簿册」</b>。人物好感、判词、百科、诗、回目都记在里头。`,hl:()=>mode==='modal'?null:'#tbJournal',done:()=>T.journal},
-  {id:'save',text:()=>'最后学存档：合上簿册，点<b>「存档」</b>，再点<b>「手动存档」</b>。（每过一个时辰、每次换地方，也会自动存。）',hl:()=>$('#doSave')?'#doSave':mode==='modal'?'#mClose':'#tbSave',done:()=>T.save},
+  {id:'gate',text:()=>`园子外头还有荣府、宁府、街市……走到园西的<b>大观园正门</b>（跟着金色光柱），${isTouch?'点下方按钮':`按 ${kb('E')} 或点下方按钮`}，就能出园去荣国府。换地方不耗时辰。`,target:()=>({rid:'garden',loc:'gardengate',label:'出园去荣国府',sub:'走到大观园正门'}),hl:()=>mode==='modal'?'#mClose':$('#talkBtn').classList.contains('hidden')?'#tracker':'#talkBtn',done:()=>T.gate||S.region!=='garden'},
+  {id:'save',text:()=>'到荣国府了！最后学存档：点<b>「存档」</b>，再点<b>「手动存档」</b>。（每过一个时辰、每次换地方，也会自动存。）',hl:()=>$('#doSave')?'#doSave':mode==='modal'?'#mClose':'#tbSave',done:()=>T.save},
 ];
 function startTutorial(){ for(const k in T) T[k]=0; S.tut={on:true,step:0}; $('#guideText').dataset.h=''; renderGuide(); trT=1; }
 function skipTutorial(){ if(S.tut) S.tut.on=false; localStorage.setItem(TUT_OFF,'1'); $('#guide').classList.add('hidden'); setHL(null); toast('已跳过引导。可在「设置」中重新开始。'); trT=1; }
@@ -587,6 +588,7 @@ const HINTS={
   travel:['到了新地方','每个地域都有自己的人物、回目和物件。走到门楼前按 E（或点按钮）就能去别处；去过的地方，可以在地图里点地名直接乘轿过去。换地方不耗时辰。'],
   pickup:['拾得一件物事','地上发光的小物件，走过去就能拾起，会解锁「簿册 → 百科」里的典故。每个地域都藏着两件。'],
   taixu:['太虚幻境','这里是梦中之境。去薄命司翻翻册子；南边的"梦醒处"可以回到怡红院。'],
+  aff:['好感到了一个坎','好感达 35 变「亲」、60 变「知心」，能说的心事更多；达 50 还会揭开她在「簿册 → 金陵判词」里的判词。结局也看好感——想走谁的结局，就多陪她。'],
   portal:['门楼','这里通往别的地域。按 E 或点下方按钮就能过去，不耗时辰。'],
 };
 const hintQ=[];

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>红楼·大观园梦 —— 3D《红楼梦》互动叙事游戏</title>
-<meta name="description" content="以《红楼梦》为题材的浏览器 3D 互动叙事游戏：自石头记开篇入梦，漫游大观园，与金陵十二钗对话，结海棠诗社，走向六种结局。">
+<meta name="description" content="以《红楼梦》为题材的浏览器 3D 互动叙事游戏：自石头记开篇入梦，漫游大观园、荣宁二府、京城街市与城外，梦游太虚幻境，与金陵十二钗对话，结海棠诗社，走向六种结局。">
 <meta name="theme-color" content="#2a1410">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
@@ -35,6 +35,7 @@
       <button id="newGame">开　卷</button>
       <button id="continueGame">续　读</button>
       <button data-open="about">卷　首</button>
+      <button data-open="help">玩　法</button>
       <button data-open="settings">设　置</button>
     </div>
     <p class="tiny">建议佩戴耳机 · 支持电脑与手机</p>
@@ -54,19 +55,21 @@
   <div id="clock"><div class="seal sm" id="clockSeal">晨</div><div><b id="dayName">第一回</b><small id="timeName"></small></div></div>
   <div id="stats"></div>
   <div id="toolbar">
-    <button data-open="map" title="园图 (M)"><span>園</span>园图</button>
-    <button data-open="journal" title="簿册 (J)"><span>簿</span>簿册</button>
-    <button data-open="save" title="存档"><span>存</span>存档</button>
+    <button data-open="map" id="tbMap" title="地图 (M)"><span>圖</span>地图</button>
+    <button data-open="journal" id="tbJournal" title="簿册 (J)"><span>簿</span>簿册</button>
+    <button data-open="help" id="tbHelp" title="玩法说明 (H)"><span>玩</span>玩法</button>
+    <button data-open="save" id="tbSave" title="存档"><span>存</span>存档</button>
     <button data-open="settings" title="设置"><span>設</span>设置</button>
     <button id="restBtn" title="歇息，跳过一个时辰"><span>歇</span>歇息</button>
   </div>
-  <canvas id="minimap" width="180" height="180" title="点击打开园图"></canvas>
+  <canvas id="minimap" width="180" height="180" title="点击打开地图"></canvas>
   <div id="locName"></div>
-  <div id="objective"></div>
+  <div id="tracker"></div>
   <button id="talkBtn" class="hidden"></button>
   <div id="toast"></div>
   <div id="joy" class="hidden"><div id="joyKnob"></div></div>
-  <div id="hint">WASD 行走 · 点地移动 · E 交谈 · 拖动旋转 · 滚轮缩放 · M 园图</div>
+  <div id="hint">WASD 行走 · 点地移动 · E 交谈 · 拖动旋转 · 滚轮缩放 · M 地图</div>
+  <div id="qArrow" class="hidden">➤</div>
 </div>
 
 <!-- 过场字幕 -->
@@ -86,7 +89,10 @@
   </div>
 </div>
 
-<div id="tutorial" class="hidden"><div class="tutBox"><div id="tutText"></div><button id="tutNext" class="btn">知道了</button></div></div>
+<div id="guide" class="hidden"><img id="guideImg" alt=""><div class="g-main"><div class="g-head"><b id="guideWho">袭人</b><span id="guideStep"></span><span id="guideDots"></span></div><div id="guideText"></div></div><button id="guideSkip" class="ghost">跳过引导</button></div>
+<div id="tutArrow" class="hidden">▼</div>
+<div id="hintCard" class="hidden"><b id="hintTitle"></b><div id="hintText"></div><button id="hintOk">知道了</button></div>
+<div id="travel" class="hidden"><div class="tv-in"><div id="tvName"></div><div id="tvSub"></div><div id="tvPoem"></div><div class="loadbar"><i id="tvFill"></i></div></div></div>
 <div id="modal" class="screen hidden"><div class="scroll wide" id="modalBody"></div></div>
 <div id="fade"></div>
 <noscript>本游戏需要启用 JavaScript。</noscript>

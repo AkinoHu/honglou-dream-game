@@ -44,7 +44,7 @@ export function computeAO(mesh){
 }
 export function applyAO(mesh,ao){ const n=ao.length, c=new Float32Array(n*3); for(let i=0;i<n;i++){ const v=ao[i]/255; c[i*3]=c[i*3+1]=c[i*3+2]=v; } mesh.geometry.setAttribute('color',new THREE.BufferAttribute(c,3)); mesh.material=vcMat(mesh.material); }
 // 读取离线烘焙结果；布局 hash 不匹配时返回 null（运行时再算）
-export async function loadBaked(){ try{ const [meta,bin]=await Promise.all([fetch('assets/ao.json').then(r=>r.ok?r.json():null),fetch('assets/ao.bin').then(r=>r.ok?r.arrayBuffer():null)]); if(!meta||!bin) return null; return {meta,data:new Uint8Array(bin)}; }catch(e){ return null; } }
+export async function loadBaked(key='garden'){ try{ const [meta,bin]=await Promise.all([fetch(`assets/ao_${key}.json`).then(r=>r.ok?r.json():null),fetch(`assets/ao_${key}.bin`).then(r=>r.ok?r.arrayBuffer():null)]); if(!meta||!bin) return null; return {meta,data:new Uint8Array(bin)}; }catch(e){ return null; } }
 export function layoutHash(meshes){ let h=2166136261; for(const m of meshes){ h=Math.imul(h^m.geometry.attributes.position.count,16777619); const p=m.geometry.attributes.position.array; for(let i=0;i<p.length;i+=97) h=Math.imul(h^Math.round(p[i]*100),16777619); } return (h>>>0).toString(16); }
 
 // 只合并直接子网格（用于人物骨骼分组、植物），不计算遮挡代理

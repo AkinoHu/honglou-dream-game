@@ -5,6 +5,7 @@ import { REGIONS, REGION_ORDER, GARDEN_SPOTS, REGION_LOCS, REGION_DEFS, NEW_CHAR
 import { DECOR } from './regions.js';
 import { initAudio, setMood, sfx, getVol, setVol } from './audio.js';
 
+const TUTORIAL_ON=false; // 新手引导留待第二期
 const $=s=>document.querySelector(s);
 const V3=THREE.Vector3;
 const CN=['零','一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五','十六'];
@@ -619,7 +620,7 @@ async function endPrologue(){ await fade('第一回',600); $('#prologue').classL
 // ================= 开始 =================
 function startPlay(fresh){ $('#hud').classList.remove('hidden'); mode='play'; W.applySky(S.slot,S.day); syncPickups(); placeNPCs(true); setMood(S.slot===2||S.region==='taixu'?'night':'day'); renderStats();
   cam.yaw=S.region==='garden'?Math.atan2(player.position.x,player.position.z):player.rotation.y+Math.PI; cam.pitch=.5; cam.focus.copy(player.position).setY(1.6); W.camera.position.set(cam.focus.x+Math.sin(cam.yaw)*12,cam.focus.y+7,cam.focus.z+Math.cos(cam.yaw)*12);
-  const lo=localOf(player.position); reveal(S.region,lo.x,lo.z,16); if(fresh===true){ reveal('garden',0,0,12); if(!localStorage.getItem(TUT_OFF)) startTutorial(); } else if(S.tut?.on) renderGuide();
+  const lo=localOf(player.position); reveal(S.region,lo.x,lo.z,16); if(fresh===true){ reveal('garden',0,0,12); if(TUTORIAL_ON&&!localStorage.getItem(TUT_OFF)) startTutorial(); } else if(S.tut?.on) renderGuide();
   $('#hint').textContent=KEYS; renderTracker(); }
 $('#newGame').onclick=()=>{ initAudio(); localStorage.removeItem(SAVE_KEY); S=freshState(); for(const r in FOG) delete FOG[r]; for(const r in FOGC) delete FOGC[r]; W.setRegion('garden'); player.position.copy(localToWorld('yihong',0,4.4)); player.rotation.y=0; startPrologue(); };
 $('#continueGame').onclick=async()=>{ initAudio(); const d=localStorage.getItem(SAVE_KEY); if(!d) return; await load(JSON.parse(d)); await fade('续　读',200); $('#title').classList.add('hidden'); startPlay(); };

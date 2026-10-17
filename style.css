@@ -51,8 +51,6 @@ button{font-family:inherit;cursor:pointer}.hidden{display:none!important}
 #toolbar button:hover{background:rgba(158,31,25,.9)}
 #minimap{right:14px;bottom:14px;width:150px;height:150px;border-radius:50%;border:3px solid #c9a24a;box-shadow:0 0 0 2px #4a2010,0 6px 16px rgba(0,0,0,.5);cursor:pointer;background:#e8d8b4}
 #locName{top:18%;left:50%;transform:translateX(-50%);font-family:var(--brush);font-size:46px;color:#fff6dc;text-shadow:0 0 18px #000,0 2px 4px #000;letter-spacing:14px;pointer-events:none;opacity:0;transition:opacity 1s}
-#objective{top:74px;right:14px;max-width:260px;background:linear-gradient(270deg,rgba(30,14,8,.7),rgba(30,14,8,0));padding:6px 12px 6px 30px;text-align:right;font-size:13px;color:#fff3d6;text-shadow:0 1px 3px #000,0 0 8px #000;line-height:1.6;pointer-events:none}
-#objective b{color:#f0c060;font-weight:normal;letter-spacing:2px}
 #talkBtn{bottom:150px;left:50%;transform:translateX(-50%);background:var(--xuan),#f3e8cf;border:1px solid var(--red);color:var(--red);padding:10px 26px;font-size:18px;border-radius:2px;letter-spacing:3px;box-shadow:0 4px 18px rgba(0,0,0,.45);animation:pulse 2s infinite}
 @keyframes pulse{50%{box-shadow:0 4px 26px rgba(201,162,74,.8)}}
 #toast{bottom:205px;left:50%;transform:translateX(-50%);background:rgba(30,15,8,.86);color:#f3e8cf;padding:9px 22px;border-radius:2px;border-left:3px solid var(--gold);opacity:0;transition:opacity .4s;pointer-events:none;font-size:15px;max-width:80vw;text-align:center;letter-spacing:1px}
@@ -103,17 +101,62 @@ input[type=range]{width:100%;accent-color:var(--red)}
 .endlist{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:12px 0}.endlist span{border:1px solid #c8a878;padding:3px 10px;font-size:13px}.endlist span.got{background:var(--red);color:#f8e7c0;border-color:var(--red)}
 #mapCanvas{width:min(100%,62vh);aspect-ratio:1;display:block;margin:0 auto;cursor:pointer;border:1px solid #9e7a40}
 /* 教程 */
-#tutorial{position:fixed;inset:0;z-index:18;pointer-events:none}
-.tutBox{position:absolute;left:50%;top:22%;transform:translateX(-50%);pointer-events:auto;background:var(--xuan),#f6ecd6;border:1px solid #9e7a40;border-left:4px solid var(--red);padding:14px 20px;max-width:min(420px,90vw);box-shadow:0 8px 30px rgba(0,0,0,.5);font-size:15px;line-height:1.8;animation:inkIn .6s both}
-.tutBox .btn{margin-top:8px;font-size:14px;padding:5px 14px;letter-spacing:2px}
 #fade{position:fixed;inset:0;background:#0b0705;opacity:0;pointer-events:none;z-index:30;transition:opacity .9s;display:flex;align-items:center;justify-content:center;color:#f3e8cf;font-family:var(--brush);font-size:56px;letter-spacing:16px}
 #fade.on{opacity:1;pointer-events:auto}
 @media (max-width:700px){
   #stats{display:none}#hint{display:none}#clock{font-size:18px;padding:6px 12px 6px 8px}#toolbar{top:auto;bottom:12px;right:auto;left:50%;transform:translateX(-50%);gap:4px}#toolbar button{padding:4px 7px;font-size:10px}#toolbar button span{font-size:17px}
-  #minimap{width:96px;height:96px;top:14px;right:14px;bottom:auto}#objective{top:118px;font-size:12px;max-width:200px}
+  #minimap{width:96px;height:96px;top:14px;right:14px;bottom:auto}#tracker{top:118px;max-width:210px;font-size:12px}#guide{top:auto;bottom:118px;width:94vw}#guide img{width:44px;height:55px}#hintCard{top:auto;bottom:250px;left:50%;right:auto;transform:translateX(-50%);width:86vw}.mapzoom{right:6px}
   #talkBtn{bottom:190px}#toast{bottom:240px}#joy{bottom:80px;left:16px;width:110px;height:110px}#joyKnob{left:30px;top:30px}
   #portrait{flex-basis:84px;margin-top:-50px}#portrait img{width:84px;height:106px}#portrait .seal{display:none}
   .dlgInner{padding:12px 14px 12px 12px;gap:10px;max-height:62vh}#dlgText{font-size:15.5px}.speaker{font-size:22px}
   .titlewrap{margin-left:6vw;grid-template-columns:auto 1fr}.couplet{font-size:13px}.menu{width:150px}#locName{font-size:32px}
   #chapterCard{right:6vw}
 }
+
+/* ===== 当前目标 ===== */
+#tracker{top:76px;right:14px;max-width:270px;min-width:180px;background:linear-gradient(270deg,rgba(30,14,8,.82),rgba(30,14,8,.35));border-right:3px solid var(--gold);padding:7px 12px 8px 22px;text-align:right;font-size:13px;color:#fff3d6;text-shadow:0 1px 3px #000;line-height:1.55;pointer-events:none;transition:box-shadow .3s}
+#tracker .tk-h{font-size:11px;letter-spacing:3px;color:#e8c070;opacity:.9}
+#tracker .tk-t{font-size:15px;color:#fff;letter-spacing:1px}
+#tracker .tk-s{font-size:12px;opacity:.85}
+#tracker .tk-d{font-size:12px;color:#f0c060;margin-top:2px}
+#tracker .tk-arrow{display:inline-block;font-style:normal;font-weight:bold;margin-right:6px;color:#ff7050;transition:transform .3s}
+#qArrow{left:0;top:0;color:#ff5a3a;font-size:30px;text-shadow:0 0 8px #000,0 0 3px #fff;pointer-events:none;z-index:6;animation:qpulse 1.2s infinite}
+@keyframes qpulse{50%{opacity:.55}}
+#talkBtn.portal{color:#3a1a0c;border-color:var(--gold);background:linear-gradient(180deg,#f8e2a8,#e8c070)}
+/* ===== 新手引导 ===== */
+#guide{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:22;display:flex;gap:12px;align-items:center;background:var(--xuan),linear-gradient(170deg,#f8efdc,#ecdcb8);border:1px solid #9e7a40;border-left:5px solid var(--red);box-shadow:0 8px 28px rgba(0,0,0,.45);padding:10px 14px 10px 10px;width:min(560px,92vw);font-size:15px;line-height:1.7;color:#2a1a12}
+#guide.pop{animation:gpop .45s both}@keyframes gpop{0%{transform:translateX(-50%) translateY(-14px);opacity:0}100%{transform:translateX(-50%);opacity:1}}
+#guide img{width:58px;height:72px;object-fit:cover;border:1px solid #9e7a40;border-radius:2px;background:#efe2c4;flex:none}
+#guide .g-main{flex:1;min-width:0}
+#guide .g-head{display:flex;gap:10px;align-items:center;font-size:12px;color:#8a6a4a;letter-spacing:1px}
+#guide .g-head b{font-family:var(--brush);font-size:20px;color:var(--red);font-weight:normal}
+#guideDots{display:flex;gap:4px;margin-left:auto}#guideDots i{width:8px;height:8px;border-radius:50%;background:#d8c8a0;border:1px solid #b09060}#guideDots i.ok{background:#3f7a64}#guideDots i.cur{background:var(--red);transform:scale(1.25)}
+#guideSkip{position:absolute;right:8px;bottom:6px;font-size:11px;padding:2px 8px;color:#8a6a4a;border:1px solid #c0a070;background:transparent;cursor:pointer}
+#guideText{padding-bottom:12px}
+kbd{display:inline-block;min-width:1.5em;padding:0 5px;margin:0 1px;border:1px solid #8a6a4a;border-bottom-width:3px;border-radius:4px;background:#fffaf0;font-family:var(--serif);font-size:13px;line-height:1.5;text-align:center;color:#3a1a0c}
+.tut-hl{outline:3px solid #ff5a3a !important;outline-offset:3px;box-shadow:0 0 0 6px rgba(255,90,58,.25),0 0 24px rgba(255,120,60,.9) !important;animation:hlp 1s infinite !important;position:relative;z-index:21}
+#hud>.tut-hl{position:fixed}
+@keyframes hlp{50%{outline-color:#ffd27a}}
+#tutArrow{position:fixed;z-index:23;pointer-events:none;color:#ff5a3a;font-size:34px;text-shadow:0 0 6px #fff,0 2px 6px #000}
+#tutArrow.down{transform:translate(-50%,-100%);animation:bdown .8s infinite alternate}
+#tutArrow.up{transform:translate(-50%,0);animation:bup .8s infinite alternate}
+@keyframes bdown{to{margin-top:-12px}}@keyframes bup{to{margin-top:12px}}
+/* ===== 情境提示 ===== */
+#hintCard{position:fixed;left:14px;top:50%;transform:translateY(-50%) translateX(-20px);opacity:0;transition:all .3s;z-index:19;width:280px;background:var(--xuan),linear-gradient(170deg,#f8efdc,#ecdcb8);border:1px solid #9e7a40;border-top:4px solid var(--gold);padding:10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.45);font-size:14px;line-height:1.7;color:#2a1a12}
+#hintCard.on{opacity:1;transform:translateY(-50%)}
+#hintCard b{display:block;color:var(--red);letter-spacing:2px;margin-bottom:2px}
+#hintCard button{margin-top:6px;font-size:13px;padding:3px 12px;border:1px solid #9e7a40;background:#f3e8cf;cursor:pointer}
+/* ===== 地域转场 ===== */
+#travel{position:fixed;inset:0;z-index:28;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#3a2216 0%,#0c0604 75%);opacity:0;transition:opacity .6s;color:#f3e8cf;text-align:center}
+#travel.on{opacity:1}#travel.dream{background:radial-gradient(ellipse at center,#4a3070 0%,#0e0618 75%)}
+#tvName{font-family:var(--brush);font-size:64px;letter-spacing:18px;text-shadow:0 0 24px rgba(240,192,96,.5)}
+#tvSub{font-size:16px;letter-spacing:6px;opacity:.85;margin-top:4px}
+#tvPoem{font-size:15px;letter-spacing:3px;margin:20px 0 26px;color:#e8c070;opacity:.9}
+#travel .loadbar{margin:0 auto}
+/* ===== 舆图 ===== */
+.maptabs button{position:relative}.maptabs button.unseen{opacity:.6}.maptabs small{font-size:11px;margin-left:2px}.maptabs .qdot{color:#c0392b;margin-left:4px}
+.mapwrap{position:relative;width:min(100%,62vh);margin:0 auto}
+.mapwrap #mapCanvas{width:100%;cursor:grab;touch-action:none}
+.mapzoom{position:absolute;right:-46px;top:8px;display:flex;flex-direction:column;gap:6px}
+.mapzoom button{width:36px;height:36px;font-size:20px;border:1px solid #9e7a40;background:#f3e8cf;cursor:pointer;border-radius:2px}
+.maplegend{text-align:center;color:#6a4a2a;opacity:1 !important}

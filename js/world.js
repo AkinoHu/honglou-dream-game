@@ -418,84 +418,141 @@ function corridor(a,b){ const dir=b.clone().sub(a), len=dir.length(); const g=ne
 }
 
 // ---------- 人物 ----------
-function faceTex(style){ return canvasTex(256,128,(x,w,h)=>{ x.fillStyle=style.skin||'#f6dcc4'; x.fillRect(0,0,w,h); const cx=w*.25, cy=h*.56;
+function faceTex(style){ return canvasTex(256,128,(x,w,h)=>{
+  // 半边脸 UV：左半画脸，右半作侧面肤色
+  const skin=style.skin||'#f6dcc4'; x.fillStyle=skin; x.fillRect(0,0,w,h);
+  const cx=w*.25, cy=h*.52;
+  // 额影 / 颧骨
+  let g=x.createRadialGradient(cx,cy-10,4,cx,cy,55); g.addColorStop(0,'rgba(255,255,255,.18)'); g.addColorStop(1,'rgba(0,0,0,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(cx,cy,48,58,0,0,7); x.fill();
+  g=x.createRadialGradient(cx,cy+30,2,cx,cy+30,40); g.addColorStop(0,'rgba(180,120,100,.18)'); g.addColorStop(1,'rgba(0,0,0,0)'); x.fillStyle=g; x.fillRect(cx-40,cy,80,60);
   // 腮红
-  for(const s of[-1,1]){ const g=x.createRadialGradient(cx+s*15,cy+10,0,cx+s*15,cy+10,10); g.addColorStop(0,style.blush||'rgba(235,120,130,.45)'); g.addColorStop(1,'rgba(235,120,130,0)'); x.fillStyle=g; x.fillRect(cx+s*15-12,cy-2,24,24); }
-  // 眉
-  x.strokeStyle='#2a1a14'; x.lineWidth=1.6; for(const s of[-1,1]){ x.beginPath(); x.moveTo(cx+s*5,cy-12+(style.sad?s*0:0)); x.quadraticCurveTo(cx+s*10,cy-(style.sad?11:15),cx+s*17,cy-(style.sad?9:12)); x.stroke(); }
-  // 眼
-  x.fillStyle='#1a1010'; for(const s of[-1,1]){ x.beginPath(); x.ellipse(cx+s*10,cy-3,3.4,style.big?2.4:1.6,s*-.15,0,7); x.fill(); x.fillStyle='#fff'; x.fillRect(cx+s*10+.5,cy-4.5,1,1); x.fillStyle='#1a1010'; }
-  // 唇
-  x.fillStyle=style.lip||'#c43a3a'; x.beginPath(); x.ellipse(cx,cy+12,3.2,1.6,0,0,7); x.fill();
-  if(style.old){ x.strokeStyle='rgba(120,80,60,.5)'; x.lineWidth=1; for(const s of[-1,1]){ x.beginPath(); x.arc(cx+s*14,cy+4,6,.2,1.2); x.stroke(); } }
+  for(const s of[-1,1]){ g=x.createRadialGradient(cx+s*18,cy+14,0,cx+s*18,cy+14,14); g.addColorStop(0,style.blush||'rgba(235,120,130,.5)'); g.addColorStop(1,'rgba(235,120,130,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(cx+s*18,cy+14,14,10,0,0,7); x.fill(); }
+  // 眉（细长柳叶）
+  x.strokeStyle=style.brow||'#1a100c'; x.lineWidth=style.sad?1.4:1.8; x.lineCap='round';
+  for(const s of[-1,1]){ x.beginPath(); const y0=cy-(style.sad?10:14); x.moveTo(cx+s*6,y0+(style.sad?s*1:0)); x.quadraticCurveTo(cx+s*12,cy-(style.sad?12:17),cx+s*22,cy-(style.sad?8:12)); x.stroke(); }
+  // 眼：上眼睑 + 瞳孔高光 + 下眼线
+  for(const s of[-1,1]){ const ex=cx+s*11, ey=cy-2;
+    x.fillStyle='rgba(255,255,255,.92)'; x.beginPath(); x.ellipse(ex,ey,5.2,style.big?3.6:2.6,s*-.12,0,7); x.fill();
+    x.fillStyle='#1a1010'; x.beginPath(); x.ellipse(ex+s*.4,ey,.5+(style.big?2.2:1.7),style.big?2.6:1.9,0,0,7); x.fill();
+    x.fillStyle='#3a2818'; x.beginPath(); x.ellipse(ex+s*.4,ey,1.1,1.1,0,0,7); x.fill();
+    x.fillStyle='#fff'; x.fillRect(ex+s*.4+1.2,ey-1.6,1.4,1.4);
+    x.strokeStyle='rgba(20,10,8,.55)'; x.lineWidth=1.2; x.beginPath(); x.moveTo(ex-5,ey-1); x.quadraticCurveTo(ex,ey-(style.big?4:3),ex+5,ey-1); x.stroke();
+  }
+  // 鼻
+  x.strokeStyle='rgba(160,110,90,.45)'; x.lineWidth=1.2; x.beginPath(); x.moveTo(cx,cy+2); x.quadraticCurveTo(cx+2,cy+10,cx,cy+14); x.stroke();
+  // 唇（上薄下丰）
+  const lip=style.lip||'#c43a3a'; x.fillStyle=lip; x.beginPath(); x.moveTo(cx-4.5,cy+18); x.quadraticCurveTo(cx,cy+16.5,cx+4.5,cy+18); x.quadraticCurveTo(cx,cy+22.5,cx-4.5,cy+18); x.fill();
+  x.fillStyle='rgba(255,255,255,.25)'; x.beginPath(); x.ellipse(cx,cy+17.5,2.2,.6,0,0,7); x.fill();
+  if(style.old){ x.strokeStyle='rgba(120,80,60,.45)'; x.lineWidth=1; for(const s of[-1,1]){ x.beginPath(); x.arc(cx+s*16,cy+6,7,.15,1.3); x.stroke(); } x.beginPath(); x.moveTo(cx-3,cy+26); x.quadraticCurveTo(cx,cy+30,cx+3,cy+26); x.stroke(); }
 }); }
 // 风格：robe 外衣, skirt 裙, trim 镶边, hair, style 发式
-// 布料材质：丝绸织纹/云纹 + 边缘压暗（体积感）+ 类次表面背光 sheen
+// 布料：丝绸织纹 + 程序云纹绣 + 边缘压暗 + 次表面背光
 let SILK=null;
-function fabric(color,{pattern=true,side=THREE.FrontSide,rough=.72}={}){ if(!SILK) SILK=cloneTex(LIB.silk,[4,3]);
-  const m=new THREE.MeshStandardMaterial({color,roughness:rough,side,map:pattern?SILK.map:null,normalMap:SILK.normalMap,normalScale:new THREE.Vector2(.5,.5)});
-  m.onBeforeCompile=sh=>{ sh.fragmentShader=sh.fragmentShader.replace('#include <opaque_fragment>',`{ vec3 Vd=normalize(vViewPosition); float rim=1.0-saturate(abs(dot(normal,Vd)));
-      outgoingLight*=1.0-0.3*pow(rim,1.6);
-      outgoingLight+=diffuseColor.rgb*pow(rim,3.0)*0.35; }
+function fabric(color,{pattern=true,side=THREE.FrontSide,rough=.72,embroider=1}={}){ if(!SILK) SILK=cloneTex(LIB.silk,[4,3]);
+  const m=new THREE.MeshStandardMaterial({color,roughness:rough,side,map:pattern?SILK.map:null,normalMap:SILK.normalMap,normalScale:new THREE.Vector2(.55,.55)});
+  m.userData.embroider=embroider;
+  m.onBeforeCompile=sh=>{ sh.fragmentShader=sh.fragmentShader
+    .replace('#include <map_fragment>',`#include <map_fragment>
+      // 云纹绣：低频噪声式菱格，随 emb 强度叠色
+      float emb=${embroider.toFixed(2)};
+      if(emb>0.01){ vec2 uv2=vMapUv*6.0; float a=sin(uv2.x*3.1415)*.5+cos(uv2.y*2.7)*.5; float b=sin((uv2.x+uv2.y)*2.2); float motif=smoothstep(.55,.75,a*b*.5+.5);
+        diffuseColor.rgb=mix(diffuseColor.rgb, diffuseColor.rgb*vec3(1.15,1.05,.85)+vec3(.08,.06,.02), motif*emb*.55); }`)
+    .replace('#include <opaque_fragment>',`{ vec3 Vd=normalize(vViewPosition); float rim=1.0-saturate(abs(dot(normal,Vd)));
+      outgoingLight*=1.0-0.28*pow(rim,1.6);
+      outgoingLight+=diffuseColor.rgb*pow(rim,2.8)*0.4; }
     #include <opaque_fragment>`); };
-  m.customProgramCacheKey=()=>'fabric'+(side===THREE.DoubleSide?'2':'1'); return m; }
+  m.customProgramCacheKey=()=>'fab'+(side===THREE.DoubleSide?'2':'1')+'e'+embroider; return m; }
+function flowerOrn(parent,x,y,z,col=0xe8455a){ const g=new THREE.Group(); g.position.set(x,y,z); parent.add(g);
+  for(let i=0;i<5;i++){ const p=mesh(new THREE.SphereGeometry(.035,8,6,0,Math.PI*2,0,Math.PI/2),M(col,{emissive:col,emissiveIntensity:.15,roughness:.45}),0,0,0,g,false); p.rotation.set(.7,i/5*6.28,0,'YXZ'); p.scale.set(1,1.6,1); }
+  mesh(new THREE.SphereGeometry(.02,6,5),M(0xf0d040,{roughness:.3}),0,0,0,g,false); return g; }
 export function makeCharacter(st){
   const root=new THREE.Group(); const body=new THREE.Group(); root.add(body); const W2=st.wide||1;
-  const robeM=fabric(st.robe), robe2=fabric(st.robe,{side:THREE.DoubleSide}), skirtM=fabric(st.skirt??st.robe,{rough:.78}), trimM=M(st.trim??0xd4af37,{roughness:.45,metalness:.25,noCache:true}), hairM=M(st.hair??0x15100c,{roughness:.38,noCache:true});
-  hairM.envMapIntensity=1.3;
-  // 裙（车削，多段曲线：腰收、裙摆外扩）
-  const prof=[[0,0],[.6,0],[.64,.04],[.6,.14],[.53,.42],[.45,.75],[.37,1.05],[.3,1.24],[0,1.26]].map(([r,y])=>new THREE.Vector2(r*W2,y));
-  const skirt=mesh(new THREE.LatheGeometry(prof,28),skirtM,0,0,0,body);
-  const hem=mesh(new THREE.TorusGeometry(.62*W2,.03,6,32),trimM,0,.07,0,body,false); hem.rotation.x=Math.PI/2;
-  // 上身（车削：肩—胸—腰）
-  const torso=mesh(new THREE.LatheGeometry([[0,0],[.3,0],[.27,.2],[.24,.42],[.25,.58],[.22,.68],[.12,.76],[0,.78]].map(([r,y])=>new THREE.Vector2(r*(st.male?1.08:1),y)),20),robeM,0,1.18,0,body); torso.scale.z=.82;
-  // 外衫：女子褙子前襟敞开露出裙，男子直裰合襟；下摆略外扩
-  const gap=st.male?0:.42; const cp=[[.2,.0],[.33,.05],[.4,.35],[.47,.75],[.53,1.05],[.56,1.12]].map(([r,y])=>new THREE.Vector2(r*(st.male?1.05:1)*Math.max(1,W2*.92),1.12-y));
-  const coat=mesh(new THREE.LatheGeometry(cp,26,gap,Math.PI*2-gap*2),robe2,0,.68,0,body); coat.scale.z=.9;
-  if(gap){ for(const sg of[-1,1]){ const pts=cp.map(v=>new THREE.Vector3(Math.sin(sg*gap)*v.x,v.y+.68,Math.cos(gap)*v.x*.9+.005)); const band=mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),12,.022,5),trimM,0,0,0,body,false); } }
-  const coatHem=mesh(new THREE.TorusGeometry(.56*Math.max(1,W2*.92),.025,5,32,Math.PI*2-gap*2),trimM,0,.68,0,body,false); coatHem.rotation.set(Math.PI/2,0,Math.PI/2+gap); coatHem.scale.y=.9;
-  const collar=mesh(new THREE.TorusGeometry(.17,.04,8,20),trimM,0,1.9,.02,body,false); collar.rotation.x=Math.PI/2.3;
-  const sash=mesh(new THREE.CylinderGeometry(.27,.29,.1,20),M(st.sash??0xd4af37,{noCache:true,roughness:.5}),0,1.3,0,body,false); sash.scale.z=.85;
-  for(const s of[-1,1]){ const rb=mesh(new THREE.PlaneGeometry(.07,.75),M(st.sash??0xd4af37,{side:THREE.DoubleSide,roughness:.5}),s*.07,.92,.27,body,false); rb.rotation.z=s*.06; }
-  if(st.cape){ const cp2=mesh(new THREE.CylinderGeometry(.3,.66,1.3,24,4,true,Math.PI*.15,Math.PI*1.7),fabric(st.cape,{side:THREE.DoubleSide}),0,1.3,0,body); cp2.rotation.y=Math.PI; }
-  // 臂：内袖（裙色、窄）+ 外层广袖（外扩、镶边）
-  const arms=[]; for(const s of[-1,1]){ const sh=new THREE.Group(); sh.position.set(s*.27,1.84,0); body.add(sh);
-    mesh(new THREE.CylinderGeometry(.075,.1,.82,14,1,true),fabric(st.skirt??st.robe,{side:THREE.DoubleSide}),0,-.42,0,sh);
-    const sleeve=mesh(new THREE.CylinderGeometry(.09,st.male?.17:.23,.7,18,3,true),robe2,0,-.37,0,sh); sleeve.rotation.z=s*.06;
-    const cuff=mesh(new THREE.TorusGeometry(st.male?.17:.23,.026,6,24),trimM,s*-.02,-.72,0,sh,false); cuff.rotation.x=Math.PI/2;
-    const hand=mesh(new THREE.SphereGeometry(.065,12,10),M(0xf6dcc4,{roughness:.6}),0,-.88,.02,sh,false); hand.scale.set(.9,1.1,.8);
-    sh.rotation.z=s*.08; arms.push(sh); }
-  // 头
-  const head=new THREE.Group(); head.position.y=2.18; head.scale.setScalar(.88); body.add(head);
-  mesh(new THREE.CylinderGeometry(.08,.1,.18,8),M(0xf6dcc4),0,-.16,0,head);
-  const skull=mesh(new THREE.SphereGeometry(.27,24,18),new THREE.MeshStandardMaterial({map:faceTex(st.face||{}),roughness:.7}),0,.08,0,head); skull.scale.set(.92,1.05,.95);
-  const hairCap=mesh(new THREE.SphereGeometry(.285,20,14,0,Math.PI*2,0,Math.PI*.55),hairM,0,.11,-.02,head); hairCap.rotation.x=-.35;
-  const ornaments=[];
-  if(!st.male&&!['nun','scarf'].includes(st.style)){ // 女子：脑后长发 + 两鬓垂发
-    const back=mesh(new THREE.SphereGeometry(.27,18,14,0,Math.PI*2,Math.PI*.35,Math.PI*.55),hairM,0,-.06,-.07,head); back.scale.set(.98,1.5,.9);
-    for(const sg of[-1,1]){ const lk=mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(sg*.22,.2,.08),new THREE.Vector3(sg*.25,.02,.1),new THREE.Vector3(sg*.23,-.18,.06)]),8,.028,5),hairM,0,0,0,head,false); } }
+  const emb=st.male?.6:1; const robeM=fabric(st.robe,{embroider:emb}), robe2=fabric(st.robe,{side:THREE.DoubleSide,embroider:emb}), skirtM=fabric(st.skirt??st.robe,{rough:.78,embroider:emb*.8}), trimM=M(st.trim??0xd4af37,{roughness:.4,metalness:.35,noCache:true}), hairM=M(st.hair??0x12100e,{roughness:.32,metalness:.08,noCache:true});
+  hairM.envMapIntensity=1.4;
+  // 裙：更自然的多段腰—膝—摆
+  const prof=[[0,0],[.58,0],[.62,.03],[.6,.12],[.54,.38],[.46,.72],[.38,1.02],[.3,1.22],[0,1.24]].map(([r,y])=>new THREE.Vector2(r*W2,y));
+  const skirt=mesh(new THREE.LatheGeometry(prof,32),skirtM,0,0,0,body);
+  const hem=mesh(new THREE.TorusGeometry(.6*W2,.028,6,36),trimM,0,.06,0,body,false); hem.rotation.x=Math.PI/2;
+  // 上身：略收腰，肩略宽
+  const torso=mesh(new THREE.LatheGeometry([[0,0],[.32,0],[.29,.18],[.25,.4],[.26,.56],[.23,.68],[.12,.76],[0,.78]].map(([r,y])=>new THREE.Vector2(r*(st.male?1.1:1),y)),24),robeM,0,1.2,0,body); torso.scale.z=.8;
+  const gap=st.male?0:.4; const cp=[[.2,.0],[.34,.05],[.42,.32],[.48,.72],[.54,1.02],[.56,1.1]].map(([r,y])=>new THREE.Vector2(r*(st.male?1.06:1)*Math.max(1,W2*.92),1.1-y));
+  const coat=mesh(new THREE.LatheGeometry(cp,28,gap,Math.PI*2-gap*2),robe2,0,.7,0,body); coat.scale.z=.88;
+  if(gap){ for(const sg of[-1,1]){ const pts=cp.map(v=>new THREE.Vector3(Math.sin(sg*gap)*v.x,v.y+.7,Math.cos(gap)*v.x*.88+.006)); mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),14,.02,5),trimM,0,0,0,body,false); } }
+  const coatHem=mesh(new THREE.TorusGeometry(.55*Math.max(1,W2*.92),.022,5,36,Math.PI*2-gap*2),trimM,0,.7,0,body,false); coatHem.rotation.set(Math.PI/2,0,Math.PI/2+gap); coatHem.scale.y=.88;
+  const collar=mesh(new THREE.TorusGeometry(.16,.035,8,22),trimM,0,1.94,.02,body,false); collar.rotation.x=Math.PI/2.35;
+  const sash=mesh(new THREE.CylinderGeometry(.26,.28,.09,22),M(st.sash??0xd4af37,{noCache:true,roughness:.45,metalness:.2}),0,1.32,0,body,false); sash.scale.z=.82;
+  for(const s of[-1,1]){ const rb=mesh(new THREE.PlaneGeometry(.06,.7),M(st.sash??0xd4af37,{side:THREE.DoubleSide,roughness:.5}),s*.06,.94,.26,body,false); rb.rotation.z=s*.05; }
+  if(st.cape){ const cp2=mesh(new THREE.CylinderGeometry(.28,.64,1.28,24,4,true,Math.PI*.15,Math.PI*1.7),fabric(st.cape,{side:THREE.DoubleSide,embroider:.5}),0,1.32,0,body); cp2.rotation.y=Math.PI; }
+  // 臂
+  const arms=[]; for(const s of[-1,1]){ const sh=new THREE.Group(); sh.position.set(s*.3,1.88,0); body.add(sh);
+    mesh(new THREE.CylinderGeometry(.07,.095,.84,14,1,true),fabric(st.skirt??st.robe,{side:THREE.DoubleSide,embroider:.4}),0,-.43,0,sh);
+    const sleeve=mesh(new THREE.CylinderGeometry(.085,st.male?.16:.24,.72,18,3,true),robe2,0,-.38,0,sh); sleeve.rotation.z=s*.05;
+    const cuff=mesh(new THREE.TorusGeometry(st.male?.16:.24,.024,6,24),trimM,s*-.015,-.74,0,sh,false); cuff.rotation.x=Math.PI/2;
+    const hand=mesh(new THREE.SphereGeometry(.06,12,10),M(0xf6dcc4,{roughness:.55}),0,-.9,.02,sh,false); hand.scale.set(.85,1.05,.75);
+    sh.rotation.z=s*.06; arms.push(sh); }
+  // 头：略放大，减少「玩偶头」感
+  const head=new THREE.Group(); head.position.y=2.24; head.scale.setScalar(.95); body.add(head);
+  mesh(new THREE.CylinderGeometry(.07,.09,.16,10),M(0xf6dcc4,{roughness:.65}),0,-.14,0,head);
+  const faceMat=new THREE.MeshStandardMaterial({map:faceTex(st.face||{}),roughness:.58});
+  const skull=mesh(new THREE.SphereGeometry(.255,28,22),faceMat,0,.1,0,head); skull.scale.set(.88,1.1,.98);
+  const jaw=mesh(new THREE.SphereGeometry(.16,16,12),M((st.face&&st.face.skin)||'#f6dcc4',{roughness:.62}),0,-.02,.06,head,false); jaw.scale.set(1.15,.7,1.05);
+  const hairCap=mesh(new THREE.SphereGeometry(.275,22,16,0,Math.PI*2,0,Math.PI*.58),hairM,0,.12,-.02,head); hairCap.rotation.x=-.32;
+  if(!st.male&&!['nun','scarf'].includes(st.style)){
+    const back=mesh(new THREE.SphereGeometry(.26,20,16,0,Math.PI*2,Math.PI*.32,Math.PI*.58),hairM,0,-.08,-.08,head); back.scale.set(1,1.65,.95);
+    for(const sg of[-1,1]) mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(sg*.2,.22,.1),new THREE.Vector3(sg*.26,.02,.12),new THREE.Vector3(sg*.22,-.22,.05),new THREE.Vector3(sg*.16,-.42,.0)]),10,.026,5),hairM,0,0,0,head,false);
+  }
   const style=st.style||'bun';
-  if(style==='crown'){ // 宝玉：束发嵌宝紫金冠 + 抹额
-    const c=mesh(new THREE.CylinderGeometry(.11,.14,.18,10),P.gold,0,.38,-.02,head); mesh(new THREE.SphereGeometry(.05,8,6),M(0xd02040,{emissive:0x600010}),0,.42,.11,head);
-    const band=mesh(new THREE.TorusGeometry(.265,.025,6,24),M(0xd4af37),0,.17,.0,head,false); band.rotation.x=Math.PI/2+.1; mesh(new THREE.SphereGeometry(.04,8,6),M(0x2fbf71,{emissive:0x0a4020}),0,.2,.26,head);
-    mesh(new THREE.CylinderGeometry(.06,.02,.7,6),hairM,0,-.2,-.24,head).rotation.x=.2; }
-  if(style==='twin'){ for(const s of[-1,1]){ const b=mesh(new THREE.TorusGeometry(.1,.045,8,16),hairM,s*.2,.38,-.05,head); b.rotation.y=Math.PI/2; } mesh(new THREE.ConeGeometry(.16,.6,8),hairM,0,-.12,-.22,head).rotation.x=Math.PI+.25; }
-  if(style==='bun'||style==='lowbun'){ const y=style==='bun'?.36:.12; mesh(new THREE.SphereGeometry(.16,16,12),hairM,0,y,-.2,head); const wrap=mesh(new THREE.TorusGeometry(.13,.04,8,20),hairM,0,y,-.2,head,false); wrap.rotation.x=.6; mesh(new THREE.SphereGeometry(.035,8,6),M(0xe8e0f0,{roughness:.2,metalness:.1}),.1,y+.08,-.12,head,false); ornaments.push(mesh(new THREE.CylinderGeometry(.012,.012,.42,4),P.gold,.12,y+.02,-.2,head,false)); ornaments[0].rotation.z=1.2; }
-  if(style==='high'){ const b=mesh(new THREE.SphereGeometry(.2,12,10),hairM,0,.42,-.08,head); b.scale.set(1.3,.8,.9); for(const s of[-1,0,1]){ const f=mesh(new THREE.ConeGeometry(.04,.3,5),P.gold,s*.16,.55,-.04,head,false); f.rotation.z=-s*.6; } mesh(new THREE.SphereGeometry(.05,8,6),M(0xd02040,{emissive:0x900010}),0,.52,.12,head); }
-  if(style==='nun'){ const c=mesh(new THREE.CylinderGeometry(.24,.3,.22,16),M(0x9a9a9e),0,.3,-.02,head); mesh(new THREE.CylinderGeometry(.3,.34,.6,16,1,true),M(0x9a9a9e,{side:THREE.DoubleSide}),0,0,-.1,head); }
-  if(style==='scarf'){ const sc=mesh(new THREE.SphereGeometry(.3,14,10,0,Math.PI*2,0,Math.PI*.6),M(0x5a6a8a),0,.12,-.03,head); sc.rotation.x=-.4; }
-  if(style==='hat'){ const c=mesh(new THREE.CylinderGeometry(.2,.26,.26,14),M(st.hatC??0x1a1a22,{roughness:.6}),0,.34,-.02,head); const br=mesh(new THREE.CylinderGeometry(.34,.34,.03,16),M(st.hatC??0x1a1a22,{roughness:.6}),0,.22,-.02,head,false); for(const s of[-1,1]){ const w=mesh(new RoundedBoxGeometry(.24,.06,.02,1,.01),M(st.hatC??0x1a1a22),s*.22,.36,-.2,head,false); w.rotation.z=s*.3; } }
-  if(style==='maid'){ for(const s of[-1,1]) mesh(new THREE.SphereGeometry(.11,10,8),hairM,s*.19,.3,-.08,head); }
-  if(st.accessory==='jade'){ mesh(new THREE.SphereGeometry(.07,10,8),M(0x7fe0b0,{emissive:0x1a6040,roughness:.2}),0,1.68,.3,body,false); }
-  if(st.accessory==='lock'){ mesh(new RoundedBoxGeometry(.16,.12,.03,2,.012),P.gold,0,1.66,.3,body,false); }
-  if(st.accessory==='qilin'){ mesh(new THREE.TorusKnotGeometry(.05,.015,30,5),P.gold,.18,1.2,.3,body,false); }
-  if(st.accessory==='hoe'){ const h=new THREE.Group(); h.position.set(.36,1.1,.15); h.rotation.z=-.3; body.add(h); CYL(.02,.02,1.6,M(0x6a4a2a),0,0,0,h,5); BOX(.2,.12,.03,P.gold,0,.8,.05,h); }
-  if(st.accessory==='whisk'){ CYL(.015,.015,.6,M(0x6a4a2a),.38,1.05,.2,body,5); }
+  if(style==='crown'){ // 宝玉：束发嵌宝紫金冠 + 二龙抢珠抹额 + 通灵玉
+    mesh(new THREE.CylinderGeometry(.1,.135,.2,12),P.gold,0,.4,-.02,head);
+    mesh(new THREE.TorusGeometry(.12,.018,6,16),P.gold,0,.5,-.02,head,false).rotation.x=Math.PI/2;
+    mesh(new THREE.SphereGeometry(.045,8,6),M(0xd02040,{emissive:0x600010,metalness:.3}),0,.48,.1,head);
+    const band=mesh(new THREE.TorusGeometry(.26,.022,6,28),M(0xd4af37,{metalness:.5,roughness:.3}),0,.18,0,head,false); band.rotation.x=Math.PI/2+.08;
+    for(const s of[-1,1]){ mesh(new THREE.SphereGeometry(.025,6,5),P.gold,s*.22,.2,.12,head,false); }
+    mesh(new THREE.SphereGeometry(.038,8,6),M(0x2fbf71,{emissive:0x0a4020,roughness:.25}),0,.22,.27,head);
+    mesh(new THREE.CylinderGeometry(.05,.015,.65,6),hairM,0,-.18,-.22,head).rotation.x=.25;
+  }
+  if(style==='twin'){ // 湘云：双环髻
+    for(const s of[-1,1]){ const b=mesh(new THREE.TorusGeometry(.09,.04,8,18),hairM,s*.22,.4,-.04,head); b.rotation.y=Math.PI/2; mesh(new THREE.SphereGeometry(.03,6,5),P.gold,s*.22,.42,.06,head,false); }
+    mesh(new THREE.ConeGeometry(.14,.55,8),hairM,0,-.1,-.2,head).rotation.x=Math.PI+.2;
+  }
+  if(style==='bun'){ // 黛玉等：高髻 + 珠花 / 步摇
+    mesh(new THREE.SphereGeometry(.145,16,12),hairM,0,.38,-.18,head);
+    const wrap=mesh(new THREE.TorusGeometry(.12,.032,8,20),hairM,0,.38,-.18,head,false); wrap.rotation.x=.55;
+    flowerOrn(head,.12,.42,-.08,st.flower||0xe8455a);
+    const pin=mesh(new THREE.CylinderGeometry(.008,.008,.38,4),P.gold,.14,.36,-.16,head,false); pin.rotation.z=1.1;
+    mesh(new THREE.SphereGeometry(.028,8,6),M(0xe8e0f0,{roughness:.2,metalness:.15}),.16,.4,-.1,head,false);
+  }
+  if(style==='lowbun'){ // 宝钗等：低髻端庄
+    mesh(new THREE.SphereGeometry(.15,16,12),hairM,0,.14,-.2,head);
+    const wrap=mesh(new THREE.TorusGeometry(.12,.035,8,20),hairM,0,.14,-.2,head,false); wrap.rotation.x=.55;
+    mesh(new THREE.SphereGeometry(.03,8,6),P.gold,.1,.2,-.12,head,false);
+    const pin=mesh(new THREE.CylinderGeometry(.008,.008,.36,4),P.gold,.12,.16,-.18,head,false); pin.rotation.z=1.15;
+  }
+  if(style==='high'){ // 凤姐 / 探春 / 警幻：高耸凤髻 + 凤钗
+    const b=mesh(new THREE.SphereGeometry(.18,14,12),hairM,0,.44,-.06,head); b.scale.set(1.35,.85,.95);
+    for(const s of[-1,0,1]){ const f=mesh(new THREE.ConeGeometry(.035,.32,5),P.gold,s*.15,.58,-.02,head,false); f.rotation.z=-s*.55; }
+    // 简易凤形：弧羽 + 红宝
+    for(const s of[-1,1]){ const feather=mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(s*.02,.5,.05),new THREE.Vector3(s*.18,.7,.08),new THREE.Vector3(s*.28,.62,.02)]),6,.012,4),P.gold,0,0,0,head,false); }
+    mesh(new THREE.SphereGeometry(.045,8,6),M(0xd02040,{emissive:0x900010,metalness:.3}),0,.55,.14,head);
+  }
+  if(style==='nun'){ mesh(new THREE.CylinderGeometry(.22,.28,.2,16),M(0x9a9a9e,{roughness:.7}),0,.32,-.02,head); mesh(new THREE.CylinderGeometry(.28,.32,.55,16,1,true),M(0x9a9a9e,{side:THREE.DoubleSide,roughness:.7}),0,0,-.08,head); }
+  if(style==='scarf'){ const sc=mesh(new THREE.SphereGeometry(.29,14,10,0,Math.PI*2,0,Math.PI*.6),M(0x5a6a8a,{roughness:.75}),0,.12,-.03,head); sc.rotation.x=-.4; }
+  if(style==='hat'){ mesh(new THREE.CylinderGeometry(.18,.24,.24,14),M(st.hatC??0x1a1a22,{roughness:.55}),0,.36,-.02,head); mesh(new THREE.CylinderGeometry(.32,.32,.03,16),M(st.hatC??0x1a1a22,{roughness:.55}),0,.24,-.02,head,false); for(const s of[-1,1]){ const w=mesh(new RoundedBoxGeometry(.22,.05,.02,1,.01),M(st.hatC??0x1a1a22),s*.2,.38,-.18,head,false); w.rotation.z=s*.28; } }
+  if(style==='maid'){ for(const s of[-1,1]){ mesh(new THREE.SphereGeometry(.1,10,8),hairM,s*.2,.32,-.06,head); mesh(new THREE.SphereGeometry(.025,6,5),M(0xe8e0f0,{roughness:.3}),s*.2,.36,.04,head,false); } }
+  if(st.accessory==='jade'){ const jade=mesh(new THREE.SphereGeometry(.065,12,10),M(0x7fe0b0,{emissive:0x1a6040,roughness:.18,metalness:.15}),0,1.7,.32,body,false); mesh(new THREE.TorusGeometry(.04,.008,6,12),P.gold,0,1.76,.32,body,false).rotation.x=Math.PI/2; }
+  if(st.accessory==='lock'){ // 宝钗金锁
+    const lock=mesh(new RoundedBoxGeometry(.15,.12,.035,2,.012),P.gold,0,1.68,.32,body,false);
+    mesh(new THREE.TorusGeometry(.04,.01,6,12),P.gold,0,1.76,.32,body,false).rotation.x=Math.PI/2;
+    // 刻字暗示小平面
+    mesh(new RoundedBoxGeometry(.08,.04,.01,1,.004),M(0xf0e0a0,{metalness:.4,roughness:.35}),0,1.68,.34,body,false);
+  }
+  if(st.accessory==='qilin'){ mesh(new THREE.TorusKnotGeometry(.048,.014,36,6),P.gold,.18,1.22,.3,body,false); }
+  if(st.accessory==='hoe'){ const h=new THREE.Group(); h.position.set(.36,1.12,.15); h.rotation.z=-.28; body.add(h); CYL(.018,.018,1.5,M(0x6a4a2a),0,0,0,h,5); BOX(.18,.1,.03,P.gold,0,.78,.04,h); }
+  if(st.accessory==='whisk'){ CYL(.014,.014,.55,M(0x6a4a2a),.38,1.08,.2,body,5); mesh(new THREE.SphereGeometry(.08,8,6),M(0xf0e8d8,{roughness:.8}),.38,1.4,.2,body,false).scale.set(1,1.4,1); }
   // 鞋
-  const feet=[]; for(const s of[-1,1]){ const f=mesh(new THREE.SphereGeometry(.09,8,6),M(st.shoe??0x8e1b16),s*.13,.05,.22,root,false); f.scale.set(1,.6,1.8); feet.push(f); }
+  const feet=[]; for(const s of[-1,1]){ const f=mesh(new THREE.SphereGeometry(.085,8,6),M(st.shoe??0x8e1b16,{roughness:.7}),s*.12,.045,.2,root,false); f.scale.set(1,.55,1.7); feet.push(f); }
   const scale=st.scale||1; root.scale.setScalar(scale);
   root.traverse(o=>{ if(o.isMesh) o.castShadow=true; });
-  // 合并：躯干/裙/外衫在动画里各自摆动，保留；其余饰件按材质合并以减少 draw call
   const keep=new Set([skirt,coat]); const tmpParent=new THREE.Group(); for(const o of [...body.children]) if(keep.has(o)){ body.remove(o); tmpParent.add(o); }
   mergeChildren(body); for(const o of [...tmpParent.children]) body.add(o); for(const a of arms) mergeChildren(a); mergeChildren(head);
   root.userData.rig={body,arms,head,skirt,feet,coat,walk:0,phase:R(0,6),blend:0,armV:[0,0],armA:[0,0],lod:0};
@@ -503,20 +560,19 @@ export function makeCharacter(st){
 }
 const _cp2=new THREE.Vector3();
 export function animateCharacter(ch,dt,t,speed){
-  const r=ch.userData.rig; r.blend+=(Math.min(1,speed/2)-r.blend)*(1-Math.exp(-dt*8)); const b=r.blend; r.walk+=dt*speed*3.2;
-  const w=Math.sin(r.walk), breathe=Math.sin(t*1.6+r.phase);
-  r.body.position.y=b*Math.abs(Math.cos(r.walk))*.05+(1-b)*breathe*.01; r.body.rotation.z=b*w*.03; r.body.rotation.x=b*.06; r.body.rotation.y=b*w*.06;
-  // 手臂：目标角 + 弹簧（广袖随身晃动有惯性）
-  for(let k=0;k<2;k++){ const sg=k?-1:1; const tgt=b*sg*w*.5+(1-b)*Math.sin(t*1.1+r.phase+k)*.04; const acc=(tgt-r.armA[k])*90-r.armV[k]*14; r.armV[k]+=acc*Math.min(dt,.05); r.armA[k]+=r.armV[k]*Math.min(dt,.05);
-    r.arms[k].rotation.x=r.armA[k]; r.arms[k].rotation.z=(k?1:-1)*(.07+b*.05+Math.abs(r.armV[k])*.02); }
-  r.skirt.rotation.z=b*w*.04+(1-b)*Math.sin(t+r.phase)*.008; r.skirt.rotation.x=-b*.04; r.coat.rotation.z=r.skirt.rotation.z*.7; r.coat.rotation.x=-b*.07;
-  r.feet[0].position.z=.22+b*w*.18; r.feet[1].position.z=.22-b*w*.18; r.feet[0].position.y=.05+b*Math.max(0,w)*.05; r.feet[1].position.y=.05+b*Math.max(0,-w)*.05;
-  r.head.rotation.y=(1-b)*Math.sin(t*.4+r.phase)*.25; r.head.rotation.x=-b*.05+(1-b)*Math.sin(t*.7+r.phase)*.03; r.head.rotation.z=b*w*-.02;
-  // LOD：远处隐藏细小饰件并关闭投影
+  const r=ch.userData.rig; r.blend+=(Math.min(1,speed/2)-r.blend)*(1-Math.exp(-dt*10)); const b=r.blend; r.walk+=dt*(2.2+speed*2.6);
+  const w=Math.sin(r.walk), breathe=Math.sin(t*1.55+r.phase);
+  // 躯干：走路起伏 + 静立呼吸，幅度更柔
+  r.body.position.y=b*Math.abs(Math.cos(r.walk))*.04+(1-b)*breathe*.012; r.body.rotation.z=b*w*.025; r.body.rotation.x=b*.05; r.body.rotation.y=b*w*.05;
+  for(let k=0;k<2;k++){ const sg=k?-1:1; const tgt=b*sg*w*.55+(1-b)*Math.sin(t*1.05+r.phase+k)*.05; const acc=(tgt-r.armA[k])*70-r.armV[k]*12; r.armV[k]+=acc*Math.min(dt,.05); r.armA[k]+=r.armV[k]*Math.min(dt,.05);
+    r.arms[k].rotation.x=r.armA[k]; r.arms[k].rotation.z=(k?1:-1)*(.06+b*.04+Math.abs(r.armV[k])*.015); }
+  r.skirt.rotation.z=b*w*.035+(1-b)*Math.sin(t*.9+r.phase)*.01; r.skirt.rotation.x=-b*.035; r.coat.rotation.z=r.skirt.rotation.z*.65; r.coat.rotation.x=-b*.06;
+  r.feet[0].position.z=.2+b*w*.16; r.feet[1].position.z=.2-b*w*.16; r.feet[0].position.y=.045+b*Math.max(0,w)*.045; r.feet[1].position.y=.045+b*Math.max(0,-w)*.045;
+  r.head.rotation.y=(1-b)*Math.sin(t*.35+r.phase)*.2; r.head.rotation.x=-b*.04+(1-b)*Math.sin(t*.65+r.phase)*.025; r.head.rotation.z=b*w*-.015;
   const d=ch.getWorldPosition(_cp2).distanceTo(camera.position); const lod=d>45?2:d>24?1:0;
   if(lod!==r.lod){ r.lod=lod; ch.traverse(o=>{ if(o.isMesh) o.castShadow=lod<1; }); }
 }
-// 立绘：用独立小渲染器把人物半身渲染为图片
+
 export function renderPortraits(styles){
   const out={}; const c=document.createElement('canvas'); c.width=320;c.height=400;
   const rr=new THREE.WebGLRenderer({canvas:c,alpha:true,antialias:true,preserveDrawingBuffer:true}); rr.toneMapping=THREE.NeutralToneMapping; rr.outputColorSpace=THREE.SRGBColorSpace;

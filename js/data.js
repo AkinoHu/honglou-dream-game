@@ -14,7 +14,7 @@ export const LOCATIONS = [
 // 人物：style 为三维造型；route 为院内踱步点（局部坐标）；roam 为会去的其他地点
 export const CHARS = {
   daiyu:{ name:'林黛玉', title:'潇湘妃子', loc:'xiaoxiang', roam:['qinfang'],
-    style:{ robe:0xa9cdb8, skirt:0xe6efe6, trim:0x5f8f7a, sash:0xf0f0f0, style:'bun', flower:0xf06b8a, face:{sad:true,big:true,skin:'#f8e4d4',blush:'rgba(230,140,150,.35)',lip:'#b84860'}, accessory:'hoe', scale:.95, cape:null },
+    style:{ look:'daiyu', robe:0xa9cdb8, skirt:0xe6efe6, trim:0x5f8f7a, sash:0xf0f0f0, style:'bun', flower:0xf06b8a, face:{sad:true,big:true,skin:'#f8e4d4',blush:'rgba(230,140,150,.35)',lip:'#b84860'}, accessory:'hoe', scale:.95, cape:null },
     verdict:'可叹停机德，堪怜咏絮才。玉带林中挂，金簪雪里埋。',
     persona:'你是《红楼梦》中的林黛玉，寄居贾府，才情绝世、敏感多愁、言语尖利却真挚，与宝玉木石前盟。用半文半白的口吻、简短回复（不超过80字），不要跳出角色。',
     greet:{ cold:['你又来做什么？横竖有人和你玩，比我又会念，又会作，又会写，又会说笑。','我又不是你肚子里的蛔虫，哪里知道你来做什么。'], warm:['宝玉，你从哪里来？外头风大，也不知道披件斗篷。','紫鹃，倒茶来——二爷来了。'], close:['（黛玉正倚着窗看竹影，见你来，眼圈微微一红，又笑了。）"我当是谁，原来是你。"','"你来了。我才还想着，今儿怕是见不着你了。"'] },
@@ -28,7 +28,7 @@ export const CHARS = {
     say:{ poem:['"孤标傲世偕谁隐，一样花开为底迟？"——诗原不过是心事罢了。','"冷月葬花魂"，你说这一句可好？','诗是要立意的。第一立意要紧，若意趣真了，连词句不用修饰，自是好的。'], flower:['"花谢花飞花满天，红消香断有谁怜？"','这些落花，与其叫它们流出园去，倒不如收拾了，埋在那里，日久不过随土化了，岂不干净。'], love:['（黛玉红了脸，啐道）"你又说这些混话来欺负我！我告诉舅舅舅母去。"','"我为的是我的心。"','你心里有"妹妹"，可是见了"姐姐"，就把"妹妹"忘了。'], sad:['"一年三百六十日，风刀霜剑严相逼。"','我是一身无依无靠的人，比不得她们有爹有娘。','这泪，大约是要还完了才罢的。'], other_baochai:['宝姐姐自然是好的，你去找她便是。','我素日只当她藏奸，如今才知道，竟是我错了。'], other_xiangyun:['云丫头？她那咬舌子，"爱哥哥""爱哥哥"的，你只管去找她去。'], health:['吃了多少药，总不见好。不过捱日子罢了。','夜里又咳了一回，听着竹梢上的雨声，睡不着。'], jade:['你那块玉，她那块金……与我什么相干。','你只管砸你那劳什子，横竖我没有什么配的。'], tea:['紫鹃，把我的龙井沏一碗来。'], food:['我不吃那些油腻的，燕窝粥倒还罢了。'], season:['"秋花惨淡秋草黄，耿耿秋灯秋夜长。"'], book:['我就是个多愁多病身——呸，偏你会编派我。'], hello:['你也知道来看我？'], bye:['你去罢，横竖明儿还来。'], praise:['（黛玉抿嘴一笑）"贫嘴贱舌的。"'], question:['我又不是你肚子里的蛔虫，你问我做什么？','这话你该去问宝姐姐。'] },
     fallback:['"我为的是我的心。"','"你又来作弄我。"','"这些话，也只好对你说罢了。"','（她用帕子掩着嘴，咳了两声，并不言语。）','"你回去罢，仔细着了风。"'] },
   baochai:{ name:'薛宝钗', title:'蘅芜君', loc:'hengwu', roam:['qinfang','yishi'],
-    style:{ robe:0xf2e2b0, skirt:0xf6efdc, trim:0xc89b4a, sash:0xd4af37, style:'lowbun', face:{skin:'#fbe8d6',blush:'rgba(220,140,120,.3)',lip:'#c45a5a'}, accessory:'lock', wide:1.08 },
+    style:{ look:'baochai', robe:0xf2e2b0, skirt:0xf6efdc, trim:0xc89b4a, sash:0xd4af37, style:'lowbun', face:{skin:'#fbe8d6',blush:'rgba(220,140,120,.3)',lip:'#c45a5a'}, accessory:'lock', wide:1.08 },
     verdict:'可叹停机德，堪怜咏絮才。玉带林中挂，金簪雪里埋。',
     persona:'你是《红楼梦》中的薛宝钗，端庄稳重、博学通达、随分从时，佩金锁，常劝宝玉留意仕途经济。用温婉得体、半文半白口吻简短回复（不超过80字），不要跳出角色。',
     greet:{ cold:['宝兄弟来了。莺儿，倒茶。','"好风凭借力，送我上青云。"宝兄弟今日可读书了？'], warm:['宝兄弟来得巧，我这里才得了几样新鲜点心。','坐罢。我正描花样子呢。'], close:['（宝钗含笑放下针线）"可巧，我正想着你这两日咳嗽好了没有。"'] },
@@ -42,7 +42,7 @@ export const CHARS = {
     say:{ poem:['作诗不过是闺中游戏，原可以会可以不会。','"淡极始知花更艳"，这才是做人的道理。'], book:['男人们读书明理，辅国治民，这才是正经。','你如今也该常常地会会那些为官做宰的人们，谈讲些仕途经济的学问。'], other_daiyu:['颦儿心重，你多让着她些才是。','颦儿那张嘴，叫人恨又不是，喜欢又不是。'], health:['冷香丸要春夏秋冬四季的白花蕊十二两……说起来也繁琐。'], jade:['那是和尚送的，原不值什么。','你那玉上的字，我倒要细细赏鉴赏鉴。'], family:['家里的事，姨妈和凤丫头自有主意。我们只尽心罢了。'], tea:['莺儿，把那枫露茶沏来。'], love:['（宝钗脸上一红，低头弄衣带）"宝兄弟又说顽话了。"'], sad:['"时宝钗小惠全大体"——人生在世，各有各的难处罢了。'], hello:['宝兄弟。'], bye:['去罢，晚上仔细关好窗子。'], praise:['（宝钗抿嘴笑道）"你只管奉承我，我可不吃你这一套。"'], question:['这件事，原该慢慢商议，急不得。'] },
     fallback:['"宝兄弟，你也该留心些正经事。"','"这倒不妨，我们慢慢商议。"','（宝钗含笑不语，替你理了理衣襟上的穗子。）','"凡事留三分余地，总是好的。"'] },
   xiangyun:{ name:'史湘云', title:'枕霞旧友', loc:'qinfang', roam:['daoxiang','yihong','qiushuang'],
-    style:{ robe:0xe46a5a, skirt:0xf2d0a0, trim:0x7a2a1a, sash:0x3f6fb0, style:'twin', face:{big:true,skin:'#f7dcc0',blush:'rgba(240,110,100,.55)'}, accessory:'qilin' },
+    style:{ look:'xiangyun', robe:0xe46a5a, skirt:0xf2d0a0, trim:0x7a2a1a, sash:0x3f6fb0, style:'twin', face:{big:true,skin:'#f7dcc0',blush:'rgba(240,110,100,.55)'}, accessory:'qilin' },
     verdict:'富贵又何为？襁褓之间父母违。展眼吊斜晖，湘江水逝楚云飞。',
     persona:'你是《红楼梦》中的史湘云，豪爽娇憨、心直口快，说话咬舌把"二"念成"爱"，爱烤鹿肉、醉眠芍药。简短活泼地回复（不超过80字），不要跳出角色。',
     greet:{ cold:['爱哥哥！林姐姐！你们天天一处玩，我好容易来了，也不理我一理儿。'], warm:['走走走！烤鹿肉去！"是真名士自风流"！','我今儿可要大说大笑一回！'], close:['（湘云从山石后头跳出来，拍手大笑）"爱哥哥，可叫我逮着了！"'] },
@@ -54,7 +54,7 @@ export const CHARS = {
     say:{ poem:['"寒塘渡鹤影"！你对得上来么？','"是真名士自风流"——作诗就要大口吃肉才作得出！'], food:['鹿肉要配好酒，才是真名士！','走，烤鹿肉去！'], wine:['喝！今儿不醉不归！','"泉香而酒冽，玉碗盛来琥珀光"……'], other_daiyu:['林姐姐的嘴最是刻薄，可我偏爱她。','林姐姐专挑人的不是，你自己便是个比人强的，也不能见一个打趣一个。'], other_baochai:['宝姐姐是再好不过的人，我若有这么个亲姐姐，就是没了父母也是无妨的。'], sad:['（湘云收了笑）"我自幼没了爹娘……罢了，不提这些，喝酒！"'], love:['"爱哥哥"——哎呀，我说的是"二"哥哥！'], hello:['爱哥哥！'], bye:['明儿诗社，你可别又压尾！'], praise:['哈哈，这话我爱听！'] },
     fallback:['"爱哥哥，你又发呆了！"','（湘云哈哈大笑，拍着手。）','"痛快！"','"你这个人，就是太婆婆妈妈。"'] },
   tanchun:{ name:'贾探春', title:'蕉下客', loc:'qiushuang', roam:['yishi'],
-    style:{ robe:0x8d6fbf, skirt:0xe8e0f0, trim:0xd4af37, sash:0xd4af37, style:'high', face:{skin:'#f8dcc4'}, cape:null },
+    style:{ look:'tanchun', robe:0x8d6fbf, skirt:0xe8e0f0, trim:0xd4af37, sash:0xd4af37, style:'high', face:{skin:'#f8dcc4'}, cape:null },
     verdict:'才自精明志自高，生于末世运偏消。清明涕送江边望，千里东风一梦遥。',
     persona:'你是《红楼梦》中的贾探春，精明果敢、志向高远，庶出而自强，理家兴利除弊，发起海棠诗社。简短爽利地回复（不超过80字），不要跳出角色。',
     greet:{ cold:['二哥哥。','我这里正忙着呢。'], warm:['二哥哥来得正好，我正要起个诗社。','这几日鞋做好了，正要给你送去。'], close:['（探春放下笔，笑道）"二哥哥，我有一件大事要同你商量。"'] },
@@ -66,7 +66,7 @@ export const CHARS = {
     say:{ family:['咱们倒是一家子亲骨肉呢，一个个不像乌眼鸡似的，恨不得你吃了我，我吃了你！','可知这样大族人家，若从外头杀来，一时是杀不死的……必须先从家里自杀自灭起来，才能一败涂地！'], money:['这园子里，一年也有几百两银子的出息。','一个破荷叶，一根枯草根子，都是值钱的。'], poem:['海棠社已定了，你就叫"怡红公子"罢。','"芭蕉"是我，"蕉叶覆鹿"——你们谁敢说我是鹿！'], sad:['（探春别过脸去）"我们这样人家的姑娘，终究是要嫁出去的。"'], hello:['二哥哥。'], bye:['二哥哥慢走。'], praise:['（探春笑道）"你少来哄我。"'] },
     fallback:['"我但凡是个男人……罢了。"','"二哥哥，你也该替家里想想。"','"事情总要有个章程。"'] },
   xifeng:{ name:'王熙凤', title:'凤辣子', loc:'yishi', roam:['qinfang','yihong'],
-    style:{ robe:0xc7372a, skirt:0x3a2a5a, trim:0xd4af37, sash:0xd4af37, style:'high', face:{skin:'#fbe0cc',lip:'#b0201f',blush:'rgba(230,100,90,.4)'}, cape:0x8a2a1a, wide:1.05 },
+    style:{ look:'xifeng', robe:0xc7372a, skirt:0x3a2a5a, trim:0xd4af37, sash:0xd4af37, style:'high', face:{skin:'#fbe0cc',lip:'#b0201f',blush:'rgba(230,100,90,.4)'}, cape:0x8a2a1a, wide:1.05 },
     verdict:'凡鸟偏从末世来，都知爱慕此生才。一从二令三人木，哭向金陵事更哀。',
     persona:'你是《红楼梦》中的王熙凤，精明强干、口齿伶俐、泼辣机变，掌管荣国府家务。简短、带笑、厉害地回复（不超过80字），不要跳出角色。',
     greet:{ cold:['宝兄弟又跑到我这里来做什么？我这儿可没有胭脂给你吃。'], warm:['我来迟了，不曾迎接远客——哟，原来是宝兄弟！','好兄弟，嫂子这里正乱着呢，你坐。'], close:['（凤姐一把拉住你的手）"好兄弟，正要找你！"'] },
@@ -78,7 +78,7 @@ export const CHARS = {
     say:{ money:['外头看着这个样，里头的苦，谁知道？','"大有大的难处"，这家可不好当。'], family:['老祖宗最疼你，你可要争气。','这家里，上上下下几百口人，哪一个是省油的灯？'], love:['（凤姐丹凤眼一斜）"哟，宝兄弟这话，可别叫林妹妹听见。"'], other_daiyu:['你既吃了我们家的茶，怎么还不给我们家做媳妇？'], sad:['机关算尽太聪明……呸，谁说的这话！'], hello:['好兄弟！'], bye:['去罢去罢，我这儿还有一屋子人等着回话。'], praise:['（凤姐笑道）"就你嘴甜！"'] },
     fallback:['"好兄弟，嫂子忙着呢。"','（凤姐丹凤眼一挑，笑而不语。）','"你只管放心，有我呢。"','"平儿，把那对牌拿来。"'] },
   miaoyu:{ name:'妙玉', title:'槛外人', loc:'longcui', roam:[],
-    style:{ robe:0xcfcfd4, skirt:0xe8e8ec, trim:0x6a6a74, sash:0x8a8a94, style:'nun', face:{skin:'#faeee4',blush:'rgba(230,160,160,.2)'}, accessory:'whisk' },
+    style:{ look:'miaoyu', robe:0xcfcfd4, skirt:0xe8e8ec, trim:0x6a6a74, sash:0x8a8a94, style:'nun', face:{skin:'#faeee4',blush:'rgba(230,160,160,.2)'}, accessory:'whisk' },
     verdict:'欲洁何曾洁，云空未必空。可怜金玉质，终陷淖泥中。',
     persona:'你是《红楼梦》中的妙玉，带发修行，孤高洁癖，精于茶道，自称"槛外人"。冷淡、简短、带禅意地回复（不超过60字），不要跳出角色。',
     greet:{ cold:['（妙玉合十）施主请回罢。','你又来做什么？'], warm:['（妙玉合十）槛外人妙玉，恭肃遥叩芳辰。'], close:['（妙玉竟微微一笑）"你来了。这是五年前收的梅花上的雪。"'] },
@@ -90,7 +90,7 @@ export const CHARS = {
     say:{ tea:['这是旧年蠲的雨水？你这么个人，竟是大俗人，连水也尝不出来。','一杯为品。'], flower:['雪里红梅，原不必与人看。'], zen:['云空未必空。','纵有千年铁门槛，终须一个土馒头。'], poem:['凡诗不可失了本来面目。'], love:['（妙玉面上微红，垂目不语，手里的念珠却停了。）'], hello:['阿弥陀佛。'], bye:['施主请便。'] },
     fallback:['（妙玉垂目不语。）','"施主请回罢。"','"槛外人，不问槛内事。"','"阿弥陀佛。"'] },
   xiren:{ name:'花袭人', title:'怡红院大丫鬟', loc:'yihong', roam:['qinfang'],
-    style:{ robe:0xe9a3b6, skirt:0xf6e0e6, trim:0xa04a6a, sash:0xffffff, style:'maid', face:{skin:'#f7dcc4'} , scale:.94},
+    style:{ look:'xiren', robe:0xe9a3b6, skirt:0xf6e0e6, trim:0xa04a6a, sash:0xffffff, style:'maid', face:{skin:'#f7dcc4'} , scale:.94},
     verdict:'枉自温柔和顺，空云似桂如兰。堪羡优伶有福，谁知公子无缘。',
     persona:'你是《红楼梦》中的袭人，宝玉的大丫鬟，温柔和顺，常规劝宝玉读书上进。简短体贴地回复（不超过60字），不要跳出角色。',
     greet:{ cold:['二爷回来了。'], warm:['二爷回来了，外头冷，快加件衣裳。','二爷今儿可要早些歇着。'], close:['（袭人迎上来替你解了斗篷）"可算回来了，茶是才沏的。"'] },
@@ -100,7 +100,7 @@ export const CHARS = {
     say:{ book:['二爷好歹做个喜读书的样子，也叫老爷欢喜。'], health:['二爷快歇着罢，仔细明儿起不来。'], hello:['二爷。'], bye:['二爷早些回来。'] },
     fallback:['"二爷，早些歇着罢。"','（袭人替你掖好被角。）','"二爷又胡说了。"'] },
   qingwen:{ name:'晴雯', title:'怡红院丫鬟', loc:'yihong', roam:[], until:'qingwen',
-    style:{ robe:0x6fa8d8, skirt:0xeaf2f8, trim:0x2a4a7a, sash:0xd02040, style:'maid', face:{big:true,skin:'#fae0cc',blush:'rgba(240,110,120,.45)'}, scale:.93 },
+    style:{ look:'qingwen', robe:0x6fa8d8, skirt:0xeaf2f8, trim:0x2a4a7a, sash:0xd02040, style:'maid', face:{big:true,skin:'#fae0cc',blush:'rgba(240,110,120,.45)'}, scale:.93 },
     verdict:'霁月难逢，彩云易散。心比天高，身为下贱。风流灵巧招人怨。寿夭多因诽谤生，多情公子空牵念。',
     persona:'你是《红楼梦》中的晴雯，宝玉的丫鬟，心灵手巧、性情刚烈、嘴上不饶人。简短、爽脆地回复（不超过60字），不要跳出角色。',
     greet:{ cold:['哟，二爷还知道回来？'], warm:['二爷，扇子又坏了一把，可别再赖我。'], close:['（晴雯歪在床上，笑道）"二爷，你来替我暖暖手。"'] },
@@ -111,7 +111,7 @@ export const CHARS = {
     say:{ hello:['二爷！'], bye:['去罢去罢。'], love:['（晴雯脸一红）"二爷再说这话，我就碰死在这里！"'] },
     fallback:['"二爷，你只管去罢，我可不管。"','（晴雯一扬眉。）'] },
   liulaolao:{ name:'刘姥姥', title:'村中老妪', loc:'daoxiang', roam:['qinfang'], from:'liulaolao',
-    style:{ robe:0x7a6248, skirt:0x4a4038, trim:0x3a3028, sash:0x5a6a8a, style:'scarf', face:{old:true,skin:'#e8c8a8',blush:'rgba(200,110,90,.35)',lip:'#9a5a4a'}, scale:.9, shoe:0x3a3028 },
+    style:{ look:'liulaolao', robe:0x7a6248, skirt:0x4a4038, trim:0x3a3028, sash:0x5a6a8a, style:'scarf', face:{old:true,skin:'#e8c8a8',blush:'rgba(200,110,90,.35)',lip:'#9a5a4a'}, scale:.9, shoe:0x3a3028 },
     verdict:'势败休云贵，家亡莫论亲。偶因济刘氏，巧得遇恩人。',
     persona:'你是《红楼梦》中的刘姥姥，乡下老妪，诙谐朴实、懂人情世故，进大观园逗得众人大笑。简短、土气、风趣地回复（不超过60字），不要跳出角色。',
     greet:{ cold:['姑娘们好，老婆子又来了。'], warm:['我的佛祖！这园子比画儿还强十倍！','哥儿好，哥儿这一身，真是画上的人儿。'], close:['（刘姥姥拉着你的手）"好哥儿，你是个心善的，日后必有好报。"'] },
@@ -122,7 +122,7 @@ export const CHARS = {
     say:{ food:['这茄子竟是鸡肉做的？我的佛祖，倒得十来只鸡来配他！','"老刘，老刘，食量大似牛，吃一个老母猪不抬头！"'], family:['这样的人家，一顿螃蟹就够我们庄家人过一年了。'], hello:['哥儿好！'], bye:['哥儿留步，老婆子认得路。'], praise:['哎哟，老婆子哪里当得起！'] },
     fallback:['"老婆子没见过世面，哥儿别笑话。"','（刘姥姥咂嘴摇头，啧啧称奇。）','"阿弥陀佛。"'] },
 };
-export const PLAYER_STYLE={ robe:0xb8232e, skirt:0x2a2a3a, trim:0xd4af37, sash:0x2fbf71, style:'crown', male:true, face:{skin:'#f8dcc4',lip:'#c44a4a'}, accessory:'jade', shoe:0x1a1a1a, cape:null };
+export const PLAYER_STYLE={ look:'baoyu', robe:0xb8232e, skirt:0x2a2a3a, trim:0xd4af37, sash:0x2fbf71, style:'crown', male:true, face:{skin:'#f8dcc4',lip:'#c44a4a'}, accessory:'jade', shoe:0x1a1a1a, cape:null };
 
 // 闲谈意图（离线对话引擎用）
 export const INTENTS = [

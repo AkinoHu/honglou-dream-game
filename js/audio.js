@@ -2,7 +2,7 @@
 let ctx=null, master, musicBus, ambBus, sfxBus, reverb, started=false;
 const vol={ music:.6, amb:.5, sfx:.7, ...JSON.parse(localStorage.getItem('honglou_vol')||'{}') };
 export function getVol(){ return vol; }
-export function setVol(k,v){ vol[k]=v; localStorage.setItem('honglou_vol',JSON.stringify(vol)); if(ctx){ musicBus.gain.value=vol.music*.5; ambBus.gain.value=vol.amb*.35; sfxBus.gain.value=vol.sfx*.6; } }
+export function setVol(k,v){ vol[k]=v; localStorage.setItem('honglou_vol',JSON.stringify(vol)); if(ctx){ musicBus.gain.value=vol.music*.5*(ducked?.5:1); ambBus.gain.value=vol.amb*.35; sfxBus.gain.value=vol.sfx*.6; } }
 function impulse(sec=3.2){ const len=ctx.sampleRate*sec, b=ctx.createBuffer(2,len,ctx.sampleRate); for(let c=0;c<2;c++){ const d=b.getChannelData(c); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6); } return b; }
 export function initAudio(){
   if(ctx) { ctx.resume(); return; }
@@ -46,6 +46,7 @@ function ambience(){
   const len=ctx.sampleRate*4, b=ctx.createBuffer(1,len,ctx.sampleRate), d=b.getChannelData(0); let last=0; for(let i=0;i<len;i++){ last=(last+.02*(Math.random()*2-1))/1.02; d[i]=last*3; }
   const n=ctx.createBufferSource(); n.buffer=b; n.loop=true; const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=500; windG=ctx.createGain(); windG.gain.value=.5; n.connect(f); f.connect(windG); windG.connect(ambBus); n.start();
   const lfo=ctx.createOscillator(); lfo.frequency.value=.07; const lg=ctx.createGain(); lg.gain.value=.25; lfo.connect(lg); lg.connect(windG.gain); lfo.start();
+  { const wn=ctx.createBufferSource(); wn.buffer=noiseBuf(); wn.loop=true; const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=900; bp.Q.value=.6; const wg=ctx.createGain(); wg.gain.value=.05; const l2=ctx.createOscillator(); l2.frequency.value=.23; const l2g=ctx.createGain(); l2g.gain.value=.02; l2.connect(l2g); l2g.connect(wg.gain); wn.connect(bp); bp.connect(wg); wg.connect(ambBus); wn.start(); l2.start(); }
   const loop=()=>{ if(!ctx) return; const t=ctx.currentTime+.1;
     if(mood==='night'){ for(let k=0;k<3;k++) chirp(t+k*.09, 4200+Math.random()*300, .04, .05); }
     else if(Math.random()<.7){ const f0=2200+Math.random()*1800; for(let k=0;k<2+Math.floor(Math.random()*4);k++) chirp(t+k*.14, f0+Math.random()*500, .1, .05, true); }
@@ -54,11 +55,16 @@ function ambience(){
 }
 function chirp(t,f,dur,g,sweep){ const o=ctx.createOscillator(), ga=ctx.createGain(); o.type='sine'; o.frequency.setValueAtTime(f,t); if(sweep) o.frequency.exponentialRampToValueAtTime(f*1.4,t+dur); ga.gain.setValueAtTime(0,t); ga.gain.linearRampToValueAtTime(g,t+.01); ga.gain.exponentialRampToValueAtTime(.0005,t+dur); o.connect(ga); ga.connect(ambBus); o.start(t); o.stop(t+dur+.02); }
 // 音效
+let stepAlt=0, _nb=null; function noiseBuf(){ if(_nb) return _nb; _nb=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate); const d=_nb.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; return _nb; }
+// 对话时音乐让位（约 -6dB），结束后平滑恢复
+let ducked=false; export function duck(on){ ducked=!!on; if(ctx) musicBus.gain.setTargetAtTime(vol.music*.5*(ducked?.5:1),ctx.currentTime,.4); }
 export function sfx(kind){ if(!ctx) return; const t=ctx.currentTime;
   if(kind==='click') pluck(note(9),t,1.2,.25,sfxBus);
   if(kind==='open'){ pluck(note(7),t,2,.25,sfxBus); pluck(note(9),t+.08,2,.2,sfxBus); }
   if(kind==='good'){ [5,7,9,12].forEach((d,i)=>pluck(note(d),t+i*.1,2.5,.25,sfxBus)); }
   if(kind==='bad'){ [7,5,2].forEach((d,i)=>pluck(note(d),t+i*.18,2.5,.25,sfxBus)); }
   if(kind==='bell'){ const o=ctx.createOscillator(), g=ctx.createGain(); o.frequency.value=196; o.type='sine'; g.gain.setValueAtTime(.5,t); g.gain.exponentialRampToValueAtTime(.001,t+5); const o2=ctx.createOscillator(); o2.frequency.value=196*2.76; o2.connect(g); o.connect(g); g.connect(sfxBus); o.start(t); o2.start(t); o.stop(t+5); o2.stop(t+5); }
-  if(kind==='step'){ const o=ctx.createOscillator(), g=ctx.createGain(); o.frequency.value=90; g.gain.setValueAtTime(.05,t); g.gain.exponentialRampToValueAtTime(.001,t+.08); o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t+.1); }
+  if(kind==='step'){ const n=noiseBuf(), src=ctx.createBufferSource(); src.buffer=n; const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=(stepAlt^=1)?420+Math.random()*180:330+Math.random()*160; f.Q.value=.9; const g=ctx.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.09+Math.random()*.03,t+.012); g.gain.exponentialRampToValueAtTime(.001,t+.1); src.connect(f); f.connect(g); g.connect(sfxBus); src.start(t,Math.random()*.5,.14); }
+  if(kind==='page'){ const src=ctx.createBufferSource(); src.buffer=noiseBuf(); const f=ctx.createBiquadFilter(); f.type='highpass'; f.frequency.value=2400; const g=ctx.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.07,t+.04); g.gain.exponentialRampToValueAtTime(.001,t+.35); src.connect(f); f.connect(g); g.connect(sfxBus); src.start(t,Math.random()*.4,.4); }
+  if(kind==='tick'){ pluck(note(14),t,.5,.07,sfxBus); }
 }

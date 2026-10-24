@@ -160,3 +160,27 @@ kbd{display:inline-block;min-width:1.5em;padding:0 5px;margin:0 1px;border:1px s
 .mapzoom{position:absolute;right:-46px;top:8px;display:flex;flex-direction:column;gap:6px}
 .mapzoom button{width:36px;height:36px;font-size:20px;border:1px solid #9e7a40;background:#f3e8cf;cursor:pointer;border-radius:2px}
 .maplegend{text-align:center;color:#6a4a2a;opacity:1 !important}
+
+/* ===== v6 审美层：电影黑边、纸卷质感、手感反馈（遵循 prefers-reduced-motion） ===== */
+body::before,body::after{content:'';position:fixed;left:0;right:0;height:0;background:linear-gradient(#0b0705,#1a0f09);z-index:12;pointer-events:none;transition:height .7s cubic-bezier(.2,.8,.2,1)}
+body::before{top:0}body::after{bottom:0;background:linear-gradient(#1a0f09,#0b0705)}
+body.letterbox::before,body.letterbox::after{height:5.5vh}
+#portrait img{transition:filter .4s,transform .4s;border-image:linear-gradient(135deg,#d8b86a,#8a6228 45%,#d8b86a) 1;box-shadow:0 8px 22px #0007,0 0 0 4px #f3e8cf,0 0 0 5px #b08850}
+#portrait img.pop{animation:ppop .42s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes ppop{from{transform:scale(.94) translateY(6px);filter:brightness(1.25) saturate(.7)}to{transform:none}}
+.btn,.menu button,#toolbar button,#talkBtn{transition:transform .14s cubic-bezier(.34,1.56,.64,1),filter .2s,box-shadow .2s}
+.btn:hover,.menu button:hover,#toolbar button:hover,#talkBtn:hover{transform:translateY(-2px);filter:brightness(1.1);box-shadow:0 5px 14px #0006}
+.btn:active,.menu button:active,#toolbar button:active,#talkBtn:active{transform:translateY(1px) scale(.96);filter:brightness(.95)}
+#dlgChoices button{transition:transform .16s cubic-bezier(.34,1.56,.64,1),background .2s,box-shadow .2s}
+#dlgChoices button:hover{box-shadow:0 3px 10px #7a4a1c33,inset 3px 0 0 var(--red)}
+#dlgChoices button:active{transform:translateX(3px) scale(.985)}
+#dlgChoices button{animation:cin .38s both}#dlgChoices button:nth-child(2){animation-delay:.06s}#dlgChoices button:nth-child(3){animation-delay:.12s}#dlgChoices button:nth-child(4){animation-delay:.18s}#dlgChoices button:nth-child(n+5){animation-delay:.24s}
+@keyframes cin{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.dlgInner{box-shadow:inset 0 0 40px rgba(120,80,30,.18),0 -8px 40px rgba(0,0,0,.35)}
+#dlgText{text-shadow:0 0 .5px rgba(60,30,10,.3)}
+.speaker{background:linear-gradient(90deg,var(--red),#7a2a1a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.speaker small{-webkit-text-fill-color:#8a6a4a}
+#clock{border-image:linear-gradient(180deg,#e8c070,#8a6228) 1;box-shadow:0 4px 18px #0006}
+#stats,.scroll,.dlgInner{backdrop-filter:none}
+::selection{background:#c9a24a66}
+@media (prefers-reduced-motion:reduce){body::before,body::after{transition:none}#portrait img.pop,#dlgChoices button{animation:none}.btn,.menu button,#toolbar button,#talkBtn,#dlgChoices button{transition:none}}

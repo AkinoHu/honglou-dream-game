@@ -13,14 +13,20 @@ import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 // 红楼调色：暖、低饱和、宣纸般的高光偏暖与阴影偏青，带纸纹与暗角
 export const GradeShader = {
   uniforms: { tDiffuse:{value:null}, uSat:{value:.86}, uVib:{value:.06}, uContrast:{value:1.04}, uShadowTint:{value:new THREE.Vector3(.965,.99,1.03)}, uHighTint:{value:new THREE.Vector3(1.045,1.0,.93)},
-    uLift:{value:.012}, uExposure:{value:1}, uVignette:{value:.3}, uPaper:{value:.035}, uAspect:{value:1.7}, uTime:{value:0} },
+    uLift:{value:.012}, uExposure:{value:1}, uVignette:{value:.3}, uPaper:{value:.035}, uAspect:{value:1.7}, uTime:{value:0}, uInk:{value:.0}, uBlur:{value:0}, uTexel:{value:new THREE.Vector2(1/1280,1/720)} },
   vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
   fragmentShader:/* glsl */`
-    uniform sampler2D tDiffuse; uniform float uSat,uVib,uContrast,uLift,uExposure,uVignette,uPaper,uAspect,uTime; uniform vec3 uShadowTint,uHighTint; varying vec2 vUv;
+    uniform sampler2D tDiffuse; uniform float uSat,uVib,uContrast,uLift,uExposure,uVignette,uPaper,uAspect,uTime,uInk,uBlur; uniform vec2 uTexel; uniform vec3 uShadowTint,uHighTint; varying vec2 vUv;
     float h21(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
     float vn(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h21(i),h21(i+vec2(1,0)),f.x),mix(h21(i+vec2(0,1)),h21(i+1.),f.x),f.y); }
     void main(){
-      vec4 c=texture2D(tDiffuse,vUv); c.rgb*=uExposure;
+      vec4 c=texture2D(tDiffuse,vUv);
+      // 对话景深：以画面中心为焦点，边缘做 8 点环形模糊（便宜的伪景深）
+      if(uBlur>.002){ float rr=smoothstep(.2,.75,length((vUv-.5)*vec2(uAspect,1.)))*uBlur; if(rr>.01){ vec3 a=c.rgb; float R=rr*5.; for(int i=0;i<8;i++){ float an=float(i)*.7854+.3; a+=texture2D(tDiffuse,vUv+vec2(cos(an),sin(an))*uTexel*R*(.5+.5*float(i&1))).rgb; } c.rgb=mix(c.rgb,a/9.,clamp(rr*1.2,0.,1.)); } }
+      // 淡墨勾边：亮度十字差分，只压暗（水墨工笔的“线”）
+      if(uInk>.002){ float l0=dot(c.rgb,vec3(.2126,.7152,.0722)); float lr=dot(texture2D(tDiffuse,vUv+vec2(uTexel.x,0.)).rgb,vec3(.2126,.7152,.0722)), ll=dot(texture2D(tDiffuse,vUv-vec2(uTexel.x,0.)).rgb,vec3(.2126,.7152,.0722)), lu=dot(texture2D(tDiffuse,vUv+vec2(0.,uTexel.y)).rgb,vec3(.2126,.7152,.0722)), ld=dot(texture2D(tDiffuse,vUv-vec2(0.,uTexel.y)).rgb,vec3(.2126,.7152,.0722));
+        float e=(abs(lr-ll)+abs(lu-ld))/(l0+.25); e=smoothstep(.16,.7,e); c.rgb=mix(c.rgb,c.rgb*vec3(.55,.5,.46),uInk*e); }
+      c.rgb*=uExposure;
       float l=dot(c.rgb,vec3(.2126,.7152,.0722)); float mx=max(c.r,max(c.g,c.b)), mn=min(c.r,min(c.g,c.b)); float chroma=(mx-mn)/max(mx,1e-4);
       c.rgb=max(mix(vec3(l),c.rgb,uSat+uVib*(1.-smoothstep(.1,.7,chroma))),0.);
       c.rgb=.18*pow(max(c.rgb,vec3(1e-6))/.18,vec3(uContrast))+uLift;
@@ -69,9 +75,9 @@ export class Renderer{
     this.bloom=new UnrealBloomPass(new THREE.Vector2(w,h),.28,.45,2.2); this.bloom.enabled=q.bloom; c.addPass(this.bloom);
     this.grade=new ShaderPass(GradeShader); c.addPass(this.grade); c.addPass(new OutputPass());
     if(!samples) c.addPass(new SMAAPass());
-    this.grade.uniforms.uAspect.value=w/h; r.shadowMap.needsUpdate=true; this._w=w; this._h=h;
+    this.grade.uniforms.uAspect.value=w/h; this.grade.uniforms.uTexel.value.set(1/(w*pr),1/(h*pr)); this.grade.uniforms.uInk.value=this.tierName==='high'?.5:this.tierName==='medium'?.38:0; r.shadowMap.needsUpdate=true; this._w=w; this._h=h;
   }
-  resize(){ const w=innerWidth,h=innerHeight; if(w===this._w&&h===this._h) return; this._w=w; this._h=h; this.renderer.setSize(w,h,false); this.composer.setSize(w,h); this.gtao?.setSize(w,h); this.grade.uniforms.uAspect.value=w/h; this.camera.aspect=w/h; this.camera.updateProjectionMatrix(); }
+  resize(){ const w=innerWidth,h=innerHeight; if(w===this._w&&h===this._h) return; this._w=w; this._h=h; this.renderer.setSize(w,h,false); this.composer.setSize(w,h); this.gtao?.setSize(w,h); this.grade.uniforms.uAspect.value=w/h; this.grade.uniforms.uTexel.value.set(1/(w*this.renderer.getPixelRatio()),1/(h*this.renderer.getPixelRatio())); this.camera.aspect=w/h; this.camera.updateProjectionMatrix(); }
   setGrade(g){ const u=this.grade.uniforms; for(const k in g){ if(k==='bloom'){ this.bloom.strength=g.bloom[0]; this.bloom.threshold=g.bloom[1]; } else if(u[k]){ if(Array.isArray(g[k])) u[k].value.set(...g[k]); else u[k].value=g[k]; } } this._grade=g; }
   // 自动画质：持续低帧率时降档
   monitor(dt){ if(!this.auto) return; this._acc=(this._acc||0)+dt; this._n=(this._n||0)+1; if(this._acc>=3){ const fps=this._n/this._acc; this._acc=0; this._n=0; this.fps=fps;

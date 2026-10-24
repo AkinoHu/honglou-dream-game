@@ -3,7 +3,7 @@ import * as W from './world.js';
 import { LOCATIONS, CHARS, PLAYER_STYLE, INTENTS, EVENTS, QUIZ, POEMS, ENDINGS, ENDING_HINTS, PROLOGUE, MAX_DAY, TIMES } from './data.js';
 import { REGIONS, REGION_ORDER, GARDEN_SPOTS, REGION_LOCS, REGION_DEFS, NEW_CHARS, BIOS, NEW_EVENTS, ITEMS, LORE, ITEM_POEMS, EXTRA_VERDICTS, HELP_HTML } from './data2.js';
 import { DECOR } from './regions.js';
-import { initAudio, setMood, sfx, getVol, setVol } from './audio.js';
+import { initAudio, setMood, sfx, getVol, setVol, duck } from './audio.js';
 
 const TUTORIAL_ON=true;
 const $=s=>document.querySelector(s);
@@ -41,12 +41,12 @@ async function boot(){
   W.buildWorld(LOCATIONS); W.registerColliders(LOCATIONS);
   setLoad(40,'起造亭台楼阁……'); await nextFrame();
   await W.bakeLighting(f=>setLoad(40+Math.round(f*8),'晕染光影……'),'garden'); W.setRegion('garden'); setLoad(48,'安置人物……'); await nextFrame();
-  player=W.makeCharacter(PLAYER_STYLE); W.scene.add(player);
+  player=W.makeCharacter(PLAYER_STYLE); W.scene.add(player); W.setLookTarget(player.position);
   for(const [id,C] of Object.entries(CHARS)){ const g=W.makeCharacter(C.style); W.scene.add(g); npcs[id]={g,id,path:[],wait:R(1,4),speed:0,place:null,present:false}; }
   setLoad(65,'描画众钗容貌……'); await nextFrame();
   try{ await Promise.race([document.fonts.ready,new Promise(r=>setTimeout(r,2500))]); }catch{}
   W.signs.forEach(s=>s.userData.redraw?.());
-  portraits=W.renderPortraits({...Object.fromEntries(Object.entries(CHARS).map(([k,c])=>[k,c.style])), baoyu:PLAYER_STYLE, ...EXTRA_PORTRAITS});
+  portraits=W.renderPortraits({...Object.fromEntries(Object.entries(CHARS).map(([k,c])=>[k,c.style])), baoyu:PLAYER_STYLE, ...EXTRA_PORTRAITS},{principals:['daiyu','baochai','baoyu','xifeng','xiangyun','miaoyu','tanchun','xiren','qingwen']});
   setLoad(85,'点起灯笼……'); await nextFrame();
   W.applySky(0,1); W.resize(); placeNPCs(true);
   if(!S.pos) player.position.copy(localToWorld('yihong',0,4.4)); W.render(); setLoad(100,'入　梦'); await wait(350);
@@ -232,24 +232,30 @@ function updateQArrow(){ const el=$('#qArrow'); if(!isPlay()||!questW){ el.class
   el.style.left=((x+1)/2*innerWidth)+'px'; el.style.top=((1-y)/2*innerHeight)+'px'; el.style.transform=`translate(-50%,-50%) rotate(${Math.atan2(x,y)}rad)`; el.classList.remove('hidden'); }
 
 // ================= 对话框 =================
-let typing=null;
+let typing=null, curSpk=null, dofV=0, lastDuck=false;
+const MOOD_RX=[['angry',/哼|恼|气得|休得|岂有此理|胡说|放肆|恼了/],['sad',/泪|叹|愁|苦|罢了|可怜|哭|伤心|冷清|孤|憔悴|无奈|悲/],['shy',/羞|脸红|红了脸|害臊|低头|扭捏/],['smile',/笑|哈|欢喜|妙|好极|有趣|甚好|开心|俏皮|可爱|恭喜|高兴/]];
+const moodOf=t=>{ for(const [m,rx] of MOOD_RX) if(rx.test(t)) return m; return 'neutral'; };
+const spkObj=()=>curSpk==='baoyu'?player:(curSpk&&npcs[curSpk]?npcs[curSpk].g:null);
+function talkSet(on){ const o=spkObj(); if(o) W.setTalking(o,on); }
+function speakFx(full,talk){ const o=spkObj(); const m=moodOf(full); if(o){ W.setEmotion(o,m,8); W.setTalking(o,talk); } if(curSpk){ const src=portraits[curSpk+':'+m]||portraits[curSpk]; if(src&&$('#portraitImg').getAttribute('src')!==src){ const im=$('#portraitImg'); im.src=src; im.classList.remove('pop'); void im.offsetWidth; im.classList.add('pop'); } } }
 function portraitFor(speaker){ if(!speaker) return null; if(speaker==='你'||speaker==='宝玉') return 'baoyu'; const ex={元春:'yuanchun',李纨:'liwan',警幻仙姑:'jinghuan'}[speaker]; if(ex) return ex; return Object.keys(CHARS).find(k=>CHARS[k].name.endsWith(speaker)||CHARS[k].name===speaker||speaker===CHARS[k].name.slice(1)); }
 function setSpeaker(name,title,pid,sealText){
+  talkSet(false); curSpk=pid||null;
   $('#dlgName').textContent=name||''; $('#dlgTitle').textContent=title||'';
   const p=$('#portrait'); if(pid&&portraits[pid]){ p.classList.remove('none'); $('#portraitImg').src=portraits[pid]; $('#portraitSeal').textContent=(pid==='baoyu'?'宝玉':CHARS[pid]?CHARS[pid].name.slice(-2):name.slice(-2)); }
   else if(sealText){ p.classList.remove('none'); $('#portraitImg').src='data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 188"><rect width="150" height="188" fill="#efe2c4"/><text x="75" y="120" font-size="80" text-anchor="middle" fill="#9e1f19" font-family="serif">${sealText}</text></svg>`); $('#portraitSeal').textContent=sealText; }
   else p.classList.add('none');
 }
 function showDialog(){ $('#dialog').classList.remove('hidden'); $('#chatForm').classList.add('hidden'); $('#dlgChoices').innerHTML=''; if(mode!=='cine') mode='dialog'; }
-function typeText(html,plainLen){ const el=$('#dlgText'); clearInterval(typing); el.innerHTML=html; const full=el.textContent; if(full.length<4||window.__fast){ return; }
+function typeText(html,plainLen){ const el=$('#dlgText'); clearInterval(typing); el.innerHTML=html; const full=el.textContent; if(full.length<4||window.__fast){ speakFx(full,false); return; } speakFx(full,true);
   // 逐字显现：用 clip 方式逐渐显示文本节点
   const walker=[]; const tw=document.createTreeWalker(el,NodeFilter.SHOW_TEXT); let n; while((n=tw.nextNode())) walker.push([n,n.textContent]); walker.forEach(([n])=>n.textContent='');
-  let i=0, idx=0; typing=setInterval(()=>{ for(let k=0;k<2;k++){ if(idx>=walker.length){ clearInterval(typing); typing=null; return; } const [node,txt]=walker[idx]; node.textContent=txt.slice(0,++i); if(i>=txt.length){ idx++; i=0; } } },22);
-  el.onclick=()=>{ if(typing){ clearInterval(typing); typing=null; walker.forEach(([n,t])=>n.textContent=t); } };
+  let i=0, idx=0; typing=setInterval(()=>{ for(let k=0;k<2;k++){ if(idx>=walker.length){ clearInterval(typing); typing=null; talkSet(false); return; } const [node,txt]=walker[idx]; node.textContent=txt.slice(0,++i); if(i>=txt.length){ idx++; i=0; } } },22);
+  el.onclick=()=>{ if(typing){ clearInterval(typing); typing=null; talkSet(false); walker.forEach(([n,t])=>n.textContent=t); } };
 }
 function finishTyping(){ if(typing) $('#dlgText').click(); }
 function choice(label,fn,{disabled=false,cls=''}={}){ const b=document.createElement('button'); b.innerHTML=label; b.disabled=!!disabled; if(cls) b.className=cls; b.onclick=()=>{ if(typing){ finishTyping(); if(cls==='next') return; } sfx('click'); fn(); }; $('#dlgChoices').appendChild(b); return b; }
-function closeDialog(){ $('#dialog').classList.add('hidden'); clearInterval(typing); typing=null; for(const n of Object.values(npcs)) n.talking=false; cam.cine=null; endCine(); mode='play'; currentChat=null; }
+function closeDialog(){ $('#dialog').classList.add('hidden'); clearInterval(typing); typing=null; talkSet(false); curSpk=null; for(const n of Object.values(npcs)) n.talking=false; cam.cine=null; endCine(); mode='play'; currentChat=null; }
 function parseLine(line){ const m=line.match(/^([^｜]{1,6})｜(.*)$/s); return m?{sp:m[1],tx:m[2]}:{sp:null,tx:line}; }
 // 播放一组台词，结束后回调
 function playLines(lines,{defName,defTitle,defPid,seal}={},done){
@@ -678,6 +684,7 @@ function loop(){
     for(const it of ITEMS){ if(it.region!==S.region||S.items[it.id]) continue; const o=W.regionOrigin(it.region); if(Math.hypot(player.position.x-o.x-it.pos[0],player.position.z-it.pos[1])<1.5){ collect(it); break; } }
     if((fogT+=dt)>.25){ fogT=0; const lo=localOf(player.position); reveal(S.region,lo.x,lo.z,11); }
     if((metT+=dt)>.5){ metT=0; for(const n of Object.values(npcs)) if(n.present&&n.g.position.distanceTo(player.position)<7) S.met[n.id]=1; } }
+  { const dlgCam=mode==='dialog'&&cam.cine&&!cam.cine.orbit&&!window.__camOverride; const kf=1-Math.exp(-dt*3.5); const cf=W.camera; const wf=dlgCam?33:45; if(Math.abs(cf.fov-wf)>.05){ cf.fov+=(wf-cf.fov)*kf; cf.updateProjectionMatrix(); } dofV+=((dlgCam?1:0)-dofV)*kf; W.setDOF(dofV<.01?0:dofV); document.body.classList.toggle('letterbox',dlgCam); const dk=mode==='dialog'; if(dk!==lastDuck){ lastDuck=dk; duck(dk); } }
   if(window.__camOverride){ const o=window.__camOverride; W.camera.position.set(...o.pos); W.camera.lookAt(...o.look); }
   else if(mode==='title'||mode==='loading'||mode==='prologue'){ const a=t*.04; W.camera.position.set(Math.sin(a)*58,26,Math.cos(a)*58); W.camera.lookAt(0,2,0); }
   else if(cam.cine&&cam.cine.orbit){ const c=cam.cine, a=c.a0+(performance.now()-c.t0)/1000*.06; tmp.set(c.center.x+Math.sin(a)*c.r,c.center.y+6.5,c.center.z+Math.cos(a)*c.r); W.camera.position.lerp(tmp,1-Math.exp(-dt*1.6)); cam.focus.lerp(c.center,1-Math.exp(-dt*2.5)); W.camera.lookAt(cam.focus); }
@@ -698,4 +705,4 @@ addEventListener('resize',W.resize);
 boot().then(()=>loop()).catch(e=>{ console.error(e); $('#loadText').textContent='加载出错：'+e.message; });
 
 // 调试 / 自动化测试接口
-window.__game={ cam, W, get S(){return S;}, set S(v){S=v;}, openTalk, runEvent, finish, spendSlot, EVENTS, CHARS, LOC, ITEMS, REGION_DEFS, decideEnding, get mode(){return mode;}, npcs, get player(){return player;}, walkTo, startPlay, load, travel, fastTravel, T, TUT_STEPS, startTutorial, skipTutorial, openPage, closeModal, get quest(){return quest;}, get questW(){return questW;}, nearPortal, usePortal, locTarget, reveal, portalsData, portalWorld, collect, hint, syncPickups };
+window.__game={ THREE, cam, W, get portraits(){return portraits;}, get S(){return S;}, set S(v){S=v;}, openTalk, runEvent, finish, spendSlot, EVENTS, CHARS, LOC, ITEMS, REGION_DEFS, decideEnding, get mode(){return mode;}, npcs, get player(){return player;}, walkTo, startPlay, load, travel, fastTravel, T, TUT_STEPS, startTutorial, skipTutorial, openPage, closeModal, get quest(){return quest;}, get questW(){return questW;}, nearPortal, usePortal, locTarget, reveal, portalsData, portalWorld, collect, hint, syncPickups };

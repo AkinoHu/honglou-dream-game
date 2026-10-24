@@ -101,8 +101,9 @@ input[type=range]{width:100%;accent-color:var(--red)}
 .endlist{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:12px 0}.endlist span{border:1px solid #c8a878;padding:3px 10px;font-size:13px}.endlist span.got{background:var(--red);color:#f8e7c0;border-color:var(--red)}
 #mapCanvas{width:min(100%,62vh);aspect-ratio:1;display:block;margin:0 auto;cursor:pointer;border:1px solid #9e7a40}
 /* 教程 */
-#fade{position:fixed;inset:0;background:#0b0705;opacity:0;pointer-events:none;z-index:30;transition:opacity .9s;display:flex;align-items:center;justify-content:center;color:#f3e8cf;font-family:var(--brush);font-size:56px;letter-spacing:16px}
-#fade.on{opacity:1;pointer-events:auto}
+#fade{position:fixed;inset:0;background:#0b0705;opacity:0;pointer-events:none;z-index:30;clip-path:circle(0% at 50% 58%);transition:opacity .9s,clip-path 1s cubic-bezier(.55,.05,.25,1);display:flex;align-items:center;justify-content:center;color:#f3e8cf;font-family:var(--brush);font-size:56px;letter-spacing:16px}
+#fade.on{opacity:1;pointer-events:auto;clip-path:circle(150% at 50% 58%)}
+@media (prefers-reduced-motion:reduce){#fade{clip-path:none!important}}
 @media (max-width:700px){
   #stats{display:none}#hint{display:none}#clock{font-size:18px;padding:6px 12px 6px 8px}#toolbar{top:auto;bottom:12px;right:auto;left:50%;transform:translateX(-50%);gap:4px}#toolbar button{padding:4px 7px;font-size:10px}#toolbar button span{font-size:17px}
   #minimap{width:96px;height:96px;top:14px;right:14px;bottom:auto}#tracker{top:118px;max-width:210px;font-size:12px}#guide{top:auto;bottom:118px;width:94vw}#guide img{width:44px;height:55px}#hintCard{top:auto;bottom:250px;left:50%;right:auto;transform:translateX(-50%);width:86vw}#hintCard.on{transform:translateX(-50%)}.mapzoom{right:6px}

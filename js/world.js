@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { Water } from 'three/addons/objects/Water.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Renderer, TIERS } from './render.js';
@@ -36,6 +37,8 @@ export const REGION_IDX={garden:0,rongfu:1,ningfu:2,street:3,suburb:4,taixu:5};
 export const regionRoots={}; let ROOT=scene; export let CUR='garden';
 export const regionOrigin=id=>new THREE.Vector3((REGION_IDX[id]||0)*1000,0,0);
 export function regionOfX(x){ const i=Math.round(x/1000); return Object.keys(REGION_IDX).find(k=>REGION_IDX[k]===i)||'garden'; }
+// Blender 试点资产（沁芳亭/沁芳闸桥/亭边太湖石）；?blender=0 回到程序化版本对比
+export const BLENDER=new URLSearchParams(location.search).get('blender')!=='0';
 function makeRoot(id){ const g=new THREE.Group(); g.position.copy(regionOrigin(id)); g.name='region:'+id; scene.add(g); regionRoots[id]=g; g.updateMatrixWorld(true); return g; }
 export function setRoot(g){ ROOT=g||scene; }
 export const camera=new THREE.PerspectiveCamera(45,1,.1,600);
@@ -281,7 +284,7 @@ export function buildWorld(LOCATIONS){
   // 各处院落
   for(const L of LOCATIONS){ const g=new THREE.Group(); const [x,z]=L.pos; g.position.set(x,0,z); g.lookAt(0,0,0); if(L.rot!=null) g.rotation.set(0,L.rot,0); ROOT.add(g); locGroups[L.id]=g; buildLoc(L,g,isCompound(L)||!!SPOT_OCC[L.kind]); }
   // 拱桥（沁芳闸桥）连亭
-  for(const ang of [Math.PI/2, -Math.PI/2]) archBridge(Math.cos(ang)*6.6, Math.sin(ang)*6.6, ang);
+  if(!BLENDER) for(const ang of [Math.PI/2, -Math.PI/2]) archBridge(Math.cos(ang)*6.6, Math.sin(ang)*6.6, ang);
   // 长廊：沁芳亭→秋爽斋、→怡红院 方向
   for(const id of ['qiushuang','yihong','hengwu']){ const L=LOCATIONS.find(l=>l.id===id); const d=new THREE.Vector3(L.pos[0],0,L.pos[1]); const n=d.length(); d.normalize(); corridor(d.clone().multiplyScalar(13.5), d.clone().multiplyScalar(n-9)); }
   // 景观植物
@@ -291,7 +294,7 @@ export function buildWorld(LOCATIONS){
   for(const t of trunks){ t.updateWorldMatrix(true,false); const b=new THREE.Box3().setFromObject(t); b.expandByScalar(-.08); trunkBoxes.push({b,roof:false}); }
   for(const g of staticGroups) addStatic(g.g,g.occ);
   for(const g of treeGroups) mergeChildren(g);
-  rockery(-4,-12.5,1.4); rockery(5,12.8,1.1); staticGroups.length=0; treeGroups.length=0;
+  if(!BLENDER){ rockery(-4,-12.5,1.4); rockery(5,12.8,1.1); } else loadBlenderPilot(); staticGroups.length=0; treeGroups.length=0;
   grassTufts(RR.q.grass);
   for(let i=0;i<10;i++){ const a=R(0,6.28),r=R(15,42); flowers(Math.cos(a)*r,Math.sin(a)*r,40,2,[0xf2c14e,0xe86f8a,0xffffff,0xb07ad8]); }
   // 粒子：花瓣 / 雪
@@ -318,7 +321,7 @@ const HALL_H={hall:4,grand:4.4,tower:4,temple:4.2,boming:4.4};
 function roofOf(L){ return L.roof==='gold'?roofMats.gold:L.roof==='glaze'?roofMats.glaze:L.roof==='purple'?(roofMats.purple||(roofMats.purple=pbr(LIB,'glaze',{side:THREE.DoubleSide,color:0xc8a8f0,envMapIntensity:1.3}))):L.roof==='tile'?roofMat:null; }
 function buildLoc(L,g,occ){ staticGroups.push({g,occ});
   const flip=new THREE.Group(); flip.rotation.y=0; g.add(flip);
-  if(L.kind==='pavilion'){ pavilion(flip,2.6,3.2,{sides:6}); for(const a of [1.2,-1.2,2.4]) lantern(flip,Math.sin(a)*2.6,3.2,Math.cos(a)*2.6); return; }
+  if(L.kind==='pavilion'){ if(BLENDER){ for(const a of [Math.PI/2,-Math.PI/2]) lantern(flip,Math.sin(a)*2.2,3.0,Math.cos(a)*2.2); return; } pavilion(flip,2.6,3.2,{sides:6}); for(const a of [1.2,-1.2,2.4]) lantern(flip,Math.sin(a)*2.6,3.2,Math.cos(a)*2.6); return; }
   if(!isCompound(L)) return buildSpot(L,g,flip);
   // 院落：正房+院墙+月洞门（门朝向 +z）
   const W=compoundW(L), H=HALL_H[L.kind]||3.4;
@@ -525,3 +528,14 @@ export function setBeacon(p){ if(!beacon){ beacon=new THREE.Group(); const m=new
 export function addPickup(p,color=0x7fe0b0){ const g=new THREE.Group(); g.position.copy(p); const m=new THREE.Mesh(new THREE.OctahedronGeometry(.32),new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.9,roughness:.25,metalness:.2})); m.position.y=1.1; g.add(m);
   const halo=new THREE.Mesh(new THREE.RingGeometry(.45,.6,24),new THREE.MeshBasicMaterial({color:0xfff0b0,transparent:true,opacity:.6,depthWrite:false,side:THREE.DoubleSide})); halo.rotation.x=-Math.PI/2; halo.position.y=.06; g.add(halo); scene.add(g); pickups.push(g); return g; }
 export function removePickup(g){ scene.remove(g); const i=pickups.indexOf(g); if(i>=0) pickups.splice(i,1); }
+
+// ---------- Blender 试点 GLB（scripts/blender_pilot/pilot_assets.py 生成；AO+手绘色已烘焙进 baseColor） ----------
+function loadBlenderPilot(){
+  const root=regionRoots.garden, ld=new GLTFLoader(), base='assets/blender/';
+  const TONE={'bridge_arch.glb':.68,'taihu_rock.glb':.72,'pavilion_xieshan.glb':.92};
+  const put=(file,list)=>ld.load(base+file,gl=>{ const src=gl.scene; src.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; const m=o.material; if(m){ m.envMapIntensity=.6; m.color.setScalar(TONE[file]||1); m.roughness=.9; if(m.map) m.map.anisotropy=4; } } });
+    for(const [x,y,z,ry,s] of list){ const g=list.length>1?src.clone():src; g.position.set(x,y,z); g.rotation.y=ry; g.scale.setScalar(s); g.userData.blender=file; root.add(g); } },undefined,e=>console.warn('blender asset',file,e));
+  put('pavilion_xieshan.glb',[[0,0,0,0,1]]);                       // 沁芳亭（替换程序化六角亭）
+  put('bridge_arch.glb',[[0,0,6.6,0,1],[0,0,-6.6,Math.PI,1]]);       // 南北沁芳闸桥（桥面与 groundHeight 抛物线一致，碰撞不变）
+  put('taihu_rock.glb',[[-4,0,-12.5,.6,.95],[5,0,12.8,2.2,.8]]);    // 亭边两块太湖石（原 rockery 位置）
+}
